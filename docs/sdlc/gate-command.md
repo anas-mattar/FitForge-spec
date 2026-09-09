@@ -25,8 +25,18 @@ nothing. `npm run typecheck` is listed explicitly rather than relying on `npm ru
 Next.js can be configured to skip type errors during build, and a gate that can be silently
 weakened by a config flag is not a gate.
 
-TODO(GATE_PROOF): prove both green on the empty scaffolds and record the exit codes here
-and in `kit-adoption.json` (adoption step 3).
+**Proof status — agent-run, awaiting the owner's confirmation.** Both chains were run by the
+agent on the empty scaffolds on 2026-09-09 and both printed `EXIT: 0`:
+
+| Gate | Command | Run in | Observed |
+|---|---|---|---|
+| Backend | `dotnet build --warnaserror && dotnet test` | `fitforge-api/` | exit 0, 1 test passed |
+| Frontend | `npm run lint && npm run typecheck && npm run build && npm test` | `fitforge-web/` | exit 0, 2 tests passed |
+
+An agent-run gate is feedback, never certification (see "Agent-run gates" below). The
+`gateProof` array in `kit-adoption.json` stays empty — and the adoption doctor stays red on
+it — until the owner runs both chains and records the exit codes themselves. That red verdict
+is the to-do list, not a failure.
 
 ## Shell Syntax (reading the exit code)
 
