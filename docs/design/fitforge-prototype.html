@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FitForge — Visual Reference</title>
+<!--
+  FitForge visual reference (kit: source visual reference; docs/sdlc/review-process.md).
+
+  WHAT THIS IS: the authoritative look of every screen in FitForge v1. A feature that
+  implements a screen copies the screen's capture into specs/NNN-name/screenshots/ and
+  transcribes it into that spec's Visual Inventory; the Visual Compliance Loop then grades the
+  implementation against it. CLAUDE.md: never invent a UI layout when a visual reference exists.
+
+  HOW IT MAPS TO THE STACK: Tailwind classes here are the classes to use in fitforge-web.
+  Colors are shadcn/ui token names (--background, --card, --primary, ...), so `bg-card`,
+  `text-muted-foreground`, `border-border` transcribe 1:1 into the ShadCN theme. Components
+  drawn here (button, card, badge, input, tabs, table, progress, sheet) are the ShadCN
+  components of the same name — do not hand-roll them.
+
+  ONE EXTERNAL DEPENDENCY: the Tailwind Play CDN, so the class names in this file are the real
+  ones. Nothing else is loaded; there are no images (every graphic is inline SVG or CSS).
+
+  Press "A" or use the toggle to show the annotation callouts used when writing a spec's
+  Visual Inventory.
+-->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          border: 'hsl(var(--border))', input: 'hsl(var(--input))', ring: 'hsl(var(--ring))',
+          background: 'hsl(var(--background))', foreground: 'hsl(var(--foreground))',
+          primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+          secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+          muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+          accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+          destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+          card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          success: { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' }
+        },
+        borderRadius: { lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' },
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] }
+      }
+    }
+  }
+</script>
+<style>
+  /* shadcn/ui token layer — the values fitforge-web's globals.css must carry */
+  :root {
+    --background: 0 0% 100%;        --foreground: 240 10% 4%;
+    --card: 0 0% 100%;              --card-foreground: 240 10% 4%;
+    --primary: 22 92% 50%;          --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;        --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;            --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;           --accent-foreground: 240 6% 10%;
+    --destructive: 0 72% 51%;       --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 40%;         --success-foreground: 0 0% 100%;
+    --border: 240 6% 90%;           --input: 240 6% 90%;  --ring: 22 92% 50%;
+    --radius: 0.65rem;
+  }
+  .dark {
+    --background: 240 10% 6%;       --foreground: 0 0% 98%;
+    --card: 240 8% 9%;              --card-foreground: 0 0% 98%;
+    --primary: 22 92% 54%;          --primary-foreground: 240 10% 6%;
+    --secondary: 240 5% 15%;        --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 15%;            --muted-foreground: 240 5% 65%;
+    --accent: 240 5% 17%;           --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;       --destructive-foreground: 0 0% 98%;
+    --success: 142 64% 45%;         --success-foreground: 240 10% 6%;
+    --border: 240 5% 18%;           --input: 240 5% 18%;  --ring: 22 92% 54%;
+  }
+  body { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+  .anno { display: none; }
+  .show-anno .anno { display: block; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  [data-nav].active { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="font-sans antialiased">
+
+<!-- ══════════ prototype chrome (NOT part of the product UI) ══════════ -->
+<header class="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur">
+  <div class="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-2.5">
+    <div class="flex items-center gap-2">
+      <svg viewBox="0 0 24 24" class="h-6 w-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 9v6M8 7v10M16 7v10M20 9v6M8 12h8"/>
+      </svg>
+      <span class="text-sm font-semibold tracking-tight">FitForge <span class="font-normal text-muted-foreground">visual reference</span></span>
+    </div>
+    <nav class="flex flex-1 flex-wrap gap-1 text-xs" id="screen-tabs"></nav>
+    <label class="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+      <input type="checkbox" id="anno-toggle" class="accent-[hsl(var(--primary))]"> annotations
+    </label>
+    <button id="theme-toggle" class="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent">light / dark</button>
+  </div>
+</header>
+
+<main class="mx-auto max-w-[1400px] px-4 py-6">
+
+<!-- ══════════════════ 01 · SIGN IN ══════════════════ -->
+<section class="screen active" data-screen="signin" data-title="01 Sign in">
+  <div class="mb-4"><h2 class="text-lg font-semibold">01 · Sign in / Register</h2>
+    <p class="text-sm text-muted-foreground">Unauthenticated. Single centered card, no app shell.</p></div>
+  <div class="grid gap-6 lg:grid-cols-[1fr_380px]">
+    <div class="hidden rounded-lg border border-border bg-card p-10 lg:block">
+      <div class="flex h-full flex-col justify-between">
+        <div class="flex items-center gap-2 text-primary">
+          <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6M8 7v10M16 7v10M20 9v6M8 12h8"/></svg>
+          <span class="text-xl font-semibold tracking-tight text-foreground">FitForge</span>
+        </div>
+        <div>
+          <p class="max-w-sm text-2xl font-semibold leading-snug tracking-tight">Log the set. Watch the number move.</p>
+          <p class="mt-3 max-w-sm text-sm text-muted-foreground">Programs, an exercise library that knows what gear you have, and progress that comes from what you actually lifted.</p>
+        </div>
+        <p class="text-xs text-muted-foreground">No nutrition tracking. No feed. Just training.</p>
+      </div>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-6">
+      <div class="mb-5 flex gap-1 rounded-md bg-muted p-1 text-sm">
+        <button class="flex-1 rounded-sm bg-card px-3 py-1.5 font-medium shadow-sm">Sign in</button>
+        <button class="flex-1 rounded-sm px-3 py-1.5 text-muted-foreground">Register</button>
+      </div>
+      <label class="mb-1.5 block text-sm font-medium">Email</label>
+      <input type="email" value="anas@example.com" class="mb-4 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-2">
+      <div class="mb-1.5 flex items-center justify-between">
+        <label class="text-sm font-medium">Password</label>
+        <a class="text-xs text-muted-foreground underline-offset-2 hover:underline" href="#">Forgot?</a>
+      </div>
+      <input type="password" value="••••••••••" class="mb-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-2">
+      <p class="mb-4 hidden text-xs text-destructive">Email or password is incorrect.</p>
+      <button class="h-10 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground hover:opacity-90">Sign in</button>
+      <p class="mt-4 text-center text-xs text-muted-foreground">New here? <a class="text-foreground underline underline-offset-2" href="#">Create an account</a></p>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — A1 Two-panel at ≥1024px; the left panel is hidden below that, card only.
+    A2 Segmented Sign in / Register control, Sign in selected by default.
+    A3 Field order: Email, Password. "Forgot?" sits on the password label row, right-aligned.
+    A4 Error text (hidden here) renders directly under the password field in destructive color, 12px.
+    A5 Primary button is full width, 40px tall. A6 The session cookie is set by the BFF route handler, not by the API.
+  </div>
+</section>
+
+<!-- ══════════════════ APP SHELL SCREENS ══════════════════ -->
+
+<!-- 02 · TODAY -->
+<section class="screen" data-screen="today" data-title="02 Today">
+  <div class="mb-4"><h2 class="text-lg font-semibold">02 · Today (dashboard)</h2>
+    <p class="text-sm text-muted-foreground">Landing screen after sign-in. Answers: what am I doing today, and am I showing up?</p></div>
+  <div class="grid gap-4 lg:grid-cols-[220px_1fr]">
+    <!-- sidebar -->
+    <aside class="hidden rounded-lg border border-border bg-card p-3 lg:block">
+      <nav class="space-y-0.5 text-sm">
+        <a class="flex items-center gap-2.5 rounded-md bg-secondary px-3 py-2 font-medium text-secondary-foreground" href="#">Today</a>
+        <a class="flex items-center gap-2.5 rounded-md px-3 py-2 text-muted-foreground hover:bg-accent" href="#">Library</a>
+        <a class="flex items-center gap-2.5 rounded-md px-3 py-2 text-muted-foreground hover:bg-accent" href="#">Programs</a>
+        <a class="flex items-center gap-2.5 rounded-md px-3 py-2 text-muted-foreground hover:bg-accent" href="#">History</a>
+        <a class="flex items-center gap-2.5 rounded-md px-3 py-2 text-muted-foreground hover:bg-accent" href="#">Progress</a>
+      </nav>
+      <div class="mt-4 border-t border-border pt-3">
+        <a class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent" href="#">Profile &amp; settings</a>
+      </div>
+    </aside>
+    <div class="space-y-4">
+      <!-- next session card -->
+      <div class="rounded-lg border border-border bg-card p-5">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-muted-foreground">Next in your rotation</p>
+            <h3 class="mt-1 text-xl font-semibold tracking-tight">Push A — Chest &amp; shoulders</h3>
+            <p class="mt-1 text-sm text-muted-foreground">Upper/Lower 4-day · Day 1 of 4 · 5 exercises · ~55 min</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="h-10 rounded-md border border-border px-3 text-sm hover:bg-accent">Freestyle</button>
+            <button class="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90">Start session</button>
+          </div>
+        </div>
+        <ul class="mt-4 divide-y divide-border border-t border-border text-sm">
+          <li class="flex items-center justify-between py-2"><span>Barbell Bench Press</span><span class="num text-muted-foreground">4 × 6–8 · 80 kg</span></li>
+          <li class="flex items-center justify-between py-2"><span>Overhead Press</span><span class="num text-muted-foreground">3 × 8–10 · 45 kg</span></li>
+          <li class="flex items-center justify-between py-2"><span>Incline Dumbbell Press</span><span class="num text-muted-foreground">3 × 10–12 · 26 kg</span></li>
+          <li class="flex items-center justify-between py-2"><span>Cable Lateral Raise</span><span class="num text-muted-foreground">3 × 12–15 · 9 kg</span></li>
+          <li class="flex items-center justify-between py-2"><span>Triceps Rope Pushdown</span><span class="num text-muted-foreground">3 × 12–15 · 25 kg</span></li>
+        </ul>
+      </div>
+      <!-- stat tiles -->
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-lg border border-border bg-card p-4">
+          <p class="text-xs text-muted-foreground">Streak</p>
+          <p class="num mt-1 text-2xl font-semibold tracking-tight">7 <span class="text-base font-normal text-muted-foreground">weeks</span></p>
+          <p class="mt-1 text-xs text-muted-foreground">Consecutive weeks with ≥1 session</p>
+        </div>
+        <div class="rounded-lg border border-border bg-card p-4">
+          <p class="text-xs text-muted-foreground">This week's volume</p>
+          <p class="num mt-1 text-2xl font-semibold tracking-tight">18,420 <span class="text-base font-normal text-muted-foreground">kg</span></p>
+          <p class="mt-1 text-xs text-success">+8% vs last week</p>
+        </div>
+        <div class="rounded-lg border border-border bg-card p-4">
+          <p class="text-xs text-muted-foreground">Adherence</p>
+          <p class="num mt-1 text-2xl font-semibold tracking-tight">3 / 4</p>
+          <div class="mt-2 h-1.5 w-full rounded-full bg-muted"><div class="h-1.5 w-3/4 rounded-full bg-primary"></div></div>
+        </div>
+      </div>
+      <!-- recent -->
+      <div class="rounded-lg border border-border bg-card">
+        <div class="flex items-center justify-between border-b border-border px-5 py-3">
+          <h3 class="text-sm font-semibold">Recent sessions</h3>
+          <a class="text-xs text-muted-foreground underline-offset-2 hover:underline" href="#">View all</a>
+        </div>
+        <ul class="divide-y divide-border text-sm">
+          <li class="flex items-center justify-between px-5 py-3">
+            <div><p class="font-medium">Pull B — Back &amp; biceps</p><p class="text-xs text-muted-foreground">Yesterday · 52 min · 18 sets</p></div>
+            <div class="flex items-center gap-3"><span class="num text-muted-foreground">6,180 kg</span>
+              <span class="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">PR</span></div>
+          </li>
+          <li class="flex items-center justify-between px-5 py-3">
+            <div><p class="font-medium">Legs A</p><p class="text-xs text-muted-foreground">3 days ago · 61 min · 20 sets</p></div>
+            <span class="num text-muted-foreground">9,240 kg</span>
+          </li>
+          <li class="flex items-center justify-between px-5 py-3">
+            <div><p class="font-medium">Push A — Chest &amp; shoulders</p><p class="text-xs text-muted-foreground">5 days ago · 48 min · 16 sets</p></div>
+            <span class="num text-muted-foreground">5,900 kg</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — B1 Sidebar order is fixed: Today, Library, Programs, History, Progress, then Profile below a divider. Below 1024px it becomes a bottom tab bar (5 items, Profile moves into the header avatar).
+    B2 The next-session card always names the program, the day position ("Day 1 of 4") and the exercise count.
+    B3 "Start session" is the only primary button on the screen. "Freestyle" is secondary and always beside it.
+    B4 Stat tiles left→right: Streak, This week's volume, Adherence — never reordered.
+    B5 Volume delta is success-colored when ≥0, destructive when negative, muted when there is no prior week.
+    B6 The PR badge appears on a session row only when that session set at least one personal record.
+    B7 Empty state (no program): the card reads "No active program" with a primary "Browse programs" and a secondary "Start freestyle".
+  </div>
+</section>
+
+<!-- 03 · LIBRARY -->
+<section class="screen" data-screen="library" data-title="03 Library">
+  <div class="mb-4"><h2 class="text-lg font-semibold">03 · Exercise library</h2>
+    <p class="text-sm text-muted-foreground">Read-only browse. Filters are the point: muscle group, the gear you actually have, difficulty.</p></div>
+  <div class="grid gap-4 lg:grid-cols-[240px_1fr]">
+    <aside class="space-y-5 rounded-lg border border-border bg-card p-4">
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Muscle group</p>
+        <div class="space-y-1.5 text-sm">
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-[hsl(var(--primary))]"> Chest</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-[hsl(var(--primary))]"> Upper back</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-[hsl(var(--primary))]"> Shoulders</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-[hsl(var(--primary))]"> Quads</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-[hsl(var(--primary))]"> Hamstrings</label>
+          <button class="text-xs text-muted-foreground underline underline-offset-2">Show all 12</button>
+        </div>
+      </div>
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Gear available</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">Barbell</span>
+          <span class="rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">Dumbbell</span>
+          <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">Machine</span>
+          <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">Cable</span>
+          <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">Kettlebell</span>
+          <span class="rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">Bodyweight</span>
+        </div>
+        <label class="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" checked class="accent-[hsl(var(--primary))]"> Only what I can do today</label>
+      </div>
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Difficulty</p>
+        <div class="flex gap-1 rounded-md bg-muted p-1 text-xs">
+          <button class="flex-1 rounded-sm bg-card py-1 font-medium shadow-sm">Any</button>
+          <button class="flex-1 rounded-sm py-1 text-muted-foreground">Beg</button>
+          <button class="flex-1 rounded-sm py-1 text-muted-foreground">Int</button>
+          <button class="flex-1 rounded-sm py-1 text-muted-foreground">Adv</button>
+        </div>
+      </div>
+    </aside>
+    <div>
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <input placeholder="Search exercises…" class="h-10 flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-2">
+        <span class="text-sm text-muted-foreground"><span class="num">18</span> of 214</span>
+        <button class="h-10 rounded-md border border-border px-3 text-sm hover:bg-accent">+ Custom exercise</button>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <!-- card ×6 -->
+        <article class="group rounded-lg border border-border bg-card p-4 hover:border-primary/60">
+          <div class="mb-3 flex h-24 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 9v6M8 7v10M16 7v10M20 9v6M8 12h8"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold">Barbell Bench Press</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">Chest · Triceps, Shoulders</p>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Barbell</span>
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Bench</span>
+            <span class="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">Intermediate</span>
+          </div>
+        </article>
+        <article class="rounded-lg border border-border bg-card p-4">
+          <div class="mb-3 flex h-24 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8v8M18 8v8M6 12h12"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold">Incline Dumbbell Press</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">Chest · Shoulders</p>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Dumbbell</span>
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Bench</span>
+            <span class="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">Beginner</span>
+          </div>
+        </article>
+        <article class="rounded-lg border border-border bg-card p-4">
+          <div class="mb-3 flex h-24 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4v16M8 8l4-4 4 4"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold">Push-Up</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">Chest · Triceps, Core</p>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Bodyweight</span>
+            <span class="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">Beginner</span>
+          </div>
+        </article>
+        <article class="rounded-lg border border-border bg-card p-4 opacity-55">
+          <div class="mb-3 flex h-24 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="6" width="16" height="12" rx="2"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold">Pec Deck Fly</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">Chest</p>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span class="rounded-full border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-foreground">Machine — not available</span>
+          </div>
+        </article>
+        <article class="rounded-lg border border-border bg-card p-4">
+          <div class="mb-3 flex h-24 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 6v12M19 6v12M9 12h6"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold">Dumbbell Floor Press</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">Chest · Triceps</p>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Dumbbell</span>
+            <span class="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">Beginner</span>
+          </div>
+        </article>
+        <article class="rounded-lg border border-border bg-card p-4">
+          <div class="mb-3 flex h-24 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12h16M7 9v6M17 9v6"/></svg>
+          </div>
+          <h3 class="text-sm font-semibold">Close-Grip Bench Press</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">Triceps · Chest</p>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Barbell</span>
+            <span class="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">Mine</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — C1 Filter rail order: Muscle group, Gear available, Difficulty. Below 1024px it collapses into a "Filters" sheet button next to the search field.
+    C2 Selected gear chips are filled primary; unselected are outlined muted. The chip set is the member's saved gear, not the full catalog.
+    C3 With "Only what I can do today" on, exercises needing missing gear are still shown at 55% opacity with a dashed "not available" chip — never hidden (members want to know what exists).
+    C4 Card content order: media, name, "Primary · Secondary, Secondary", then chips (gear first, difficulty last).
+    C5 A member's own exercise carries a "Mine" chip in primary/15.
+    C6 Result count reads "<shown> of <total>". C7 Grid: 1 col &lt;640px, 2 cols ≥640px, 3 cols ≥1280px.
+  </div>
+</section>
+
+<!-- 04 · EXERCISE DETAIL -->
+<section class="screen" data-screen="exercise" data-title="04 Exercise">
+  <div class="mb-4"><h2 class="text-lg font-semibold">04 · Exercise detail</h2>
+    <p class="text-sm text-muted-foreground">Reference plus <em>your</em> history with this lift. The second half is why members come back.</p></div>
+  <div class="grid gap-4 lg:grid-cols-[1fr_340px]">
+    <div class="space-y-4">
+      <div class="rounded-lg border border-border bg-card p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 class="text-xl font-semibold tracking-tight">Barbell Bench Press</h3>
+            <p class="mt-1 text-sm text-muted-foreground">Chest · secondary: Triceps, Front delts</p>
+          </div>
+          <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Add to program</button>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">Barbell</span>
+          <span class="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">Bench</span>
+          <span class="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">Rack</span>
+          <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">Intermediate</span>
+        </div>
+        <div class="mt-5 grid gap-6 sm:grid-cols-2">
+          <div>
+            <h4 class="mb-2 text-sm font-semibold">How to</h4>
+            <ol class="list-decimal space-y-1.5 pl-4 text-sm text-muted-foreground">
+              <li>Set the bar at mid-chest height; lie back with eyes under the bar.</li>
+              <li>Grip just outside shoulder width; wrists stacked over elbows.</li>
+              <li>Unrack, lower to the sternum with elbows ~45° from the torso.</li>
+              <li>Press back to lockout without flaring the elbows.</li>
+            </ol>
+          </div>
+          <div>
+            <h4 class="mb-2 text-sm font-semibold">Cues</h4>
+            <ul class="space-y-1.5 text-sm text-muted-foreground">
+              <li>· Shoulder blades down and back, glued to the bench.</li>
+              <li>· Bar path is a shallow arc, not a straight line.</li>
+              <li>· Feet drive into the floor throughout.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="rounded-lg border border-border bg-card p-5">
+        <h4 class="mb-3 text-sm font-semibold">Estimated 1RM — last 6 months</h4>
+        <svg viewBox="0 0 640 180" class="h-44 w-full" role="img" aria-label="Estimated one rep max rising from 88 to 104 kilograms">
+          <g stroke="hsl(var(--border))" stroke-width="1">
+            <line x1="40" y1="20" x2="620" y2="20"/><line x1="40" y1="70" x2="620" y2="70"/>
+            <line x1="40" y1="120" x2="620" y2="120"/><line x1="40" y1="160" x2="620" y2="160"/>
+          </g>
+          <g fill="hsl(var(--muted-foreground))" font-size="11" font-family="Inter, sans-serif">
+            <text x="4" y="24">110</text><text x="4" y="74">100</text><text x="8" y="124">90</text><text x="8" y="164">80</text>
+            <text x="40" y="176">Apr</text><text x="150" y="176">May</text><text x="260" y="176">Jun</text>
+            <text x="370" y="176">Jul</text><text x="480" y="176">Aug</text><text x="580" y="176">Sep</text>
+          </g>
+          <polyline fill="none" stroke="hsl(var(--primary))" stroke-width="2.5" stroke-linejoin="round"
+                    points="60,132 150,126 240,112 330,104 420,96 510,84 600,66"/>
+          <g fill="hsl(var(--primary))">
+            <circle cx="60" cy="132" r="3.5"/><circle cx="150" cy="126" r="3.5"/><circle cx="240" cy="112" r="3.5"/>
+            <circle cx="330" cy="104" r="3.5"/><circle cx="420" cy="96" r="3.5"/><circle cx="510" cy="84" r="3.5"/>
+            <circle cx="600" cy="66" r="4.5"/>
+          </g>
+        </svg>
+        <p class="mt-1 text-xs text-muted-foreground">Epley estimate from working sets of 1–12 reps. Sets above 12 reps are excluded.</p>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div class="rounded-lg border border-border bg-card p-5">
+        <h4 class="mb-3 text-sm font-semibold">Your records</h4>
+        <dl class="space-y-3 text-sm">
+          <div class="flex items-baseline justify-between"><dt class="text-muted-foreground">Estimated 1RM</dt><dd class="num font-semibold">104.0 kg</dd></div>
+          <div class="flex items-baseline justify-between"><dt class="text-muted-foreground">Heaviest set</dt><dd class="num font-semibold">95 kg × 3</dd></div>
+          <div class="flex items-baseline justify-between"><dt class="text-muted-foreground">Best set volume</dt><dd class="num font-semibold">840 kg</dd></div>
+        </dl>
+        <p class="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">Set on 2 Sep 2026 · Push A</p>
+      </div>
+      <div class="rounded-lg border border-border bg-card">
+        <div class="border-b border-border px-5 py-3"><h4 class="text-sm font-semibold">Recent sets</h4></div>
+        <table class="w-full text-sm">
+          <thead class="text-xs text-muted-foreground">
+            <tr class="border-b border-border"><th class="px-5 py-2 text-left font-medium">Date</th><th class="px-2 py-2 text-right font-medium">Best set</th><th class="px-5 py-2 text-right font-medium">Volume</th></tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <tr><td class="px-5 py-2">2 Sep</td><td class="num px-2 py-2 text-right">95 × 3</td><td class="num px-5 py-2 text-right">2,180 kg</td></tr>
+            <tr><td class="px-5 py-2">28 Aug</td><td class="num px-2 py-2 text-right">90 × 5</td><td class="num px-5 py-2 text-right">2,340 kg</td></tr>
+            <tr><td class="px-5 py-2">24 Aug</td><td class="num px-2 py-2 text-right">90 × 4</td><td class="num px-5 py-2 text-right">2,060 kg</td></tr>
+            <tr><td class="px-5 py-2">19 Aug</td><td class="num px-2 py-2 text-right">87.5 × 5</td><td class="num px-5 py-2 text-right">2,275 kg</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — D1 Two columns ≥1024px; below that the right column stacks under the left, records card first.
+    D2 Muscle line reads "Primary · secondary: A, B" exactly.
+    D3 The chart plots estimated 1RM only; the caption stating the Epley rule and the 12-rep exclusion is mandatory (logic §4) — never a bare chart.
+    D4 An exercise with fewer than 2 qualifying sets shows "Not enough data yet" in place of the chart, same card height.
+    D5 Records card lists exactly three PRs in this order, with the date + session that set the most recent one.
+    D6 "Best set" is the heaviest working set of that day, not the last.
+  </div>
+</section>
+
+<!-- 05 · PROGRAMS -->
+<section class="screen" data-screen="programs" data-title="05 Programs">
+  <div class="mb-4"><h2 class="text-lg font-semibold">05 · Programs</h2>
+    <p class="text-sm text-muted-foreground">One active program at a time (invariant 9). Templates and the member's own, in one list.</p></div>
+  <div class="mb-4 flex flex-wrap items-center gap-3">
+    <div class="flex gap-1 rounded-md bg-muted p-1 text-sm">
+      <button class="rounded-sm bg-card px-3 py-1.5 font-medium shadow-sm">All</button>
+      <button class="rounded-sm px-3 py-1.5 text-muted-foreground">Mine</button>
+      <button class="rounded-sm px-3 py-1.5 text-muted-foreground">Templates</button>
+      <button class="rounded-sm px-3 py-1.5 text-muted-foreground">Archived</button>
+    </div>
+    <div class="flex-1"></div>
+    <button class="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90">+ New program</button>
+  </div>
+  <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <article class="rounded-lg border-2 border-primary bg-card p-5">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground">Active</span>
+        <span class="text-xs text-muted-foreground">Week 3 of 8</span>
+      </div>
+      <h3 class="text-base font-semibold">Upper/Lower 4-day</h3>
+      <p class="mt-1 text-sm text-muted-foreground">Hypertrophy · 4 days/week · 22 exercises</p>
+      <div class="mt-3 h-1.5 w-full rounded-full bg-muted"><div class="h-1.5 w-[37%] rounded-full bg-primary"></div></div>
+      <div class="mt-4 flex gap-2">
+        <button class="h-9 flex-1 rounded-md border border-border text-sm hover:bg-accent">View days</button>
+        <button class="h-9 flex-1 rounded-md border border-border text-sm hover:bg-accent">Edit</button>
+      </div>
+    </article>
+    <article class="rounded-lg border border-border bg-card p-5">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Template</span>
+        <span class="text-xs text-muted-foreground">FitForge</span>
+      </div>
+      <h3 class="text-base font-semibold">Full Body 3-day — Beginner</h3>
+      <p class="mt-1 text-sm text-muted-foreground">General · 3 days/week · 15 exercises</p>
+      <p class="mt-3 text-xs text-muted-foreground">Barbell, dumbbell, bench. No machines.</p>
+      <div class="mt-4 flex gap-2">
+        <button class="h-9 flex-1 rounded-md border border-border text-sm hover:bg-accent">Preview</button>
+        <button class="h-9 flex-1 rounded-md bg-primary text-sm font-medium text-primary-foreground hover:opacity-90">Use</button>
+      </div>
+    </article>
+    <article class="rounded-lg border border-border bg-card p-5">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">Draft</span>
+        <span class="text-xs text-muted-foreground">Edited 2 days ago</span>
+      </div>
+      <h3 class="text-base font-semibold">Push / Pull / Legs</h3>
+      <p class="mt-1 text-sm text-muted-foreground">Strength · 6 days/week · 3 of 6 days built</p>
+      <p class="mt-3 text-xs text-destructive">Days 4–6 have no exercises yet</p>
+      <div class="mt-4 flex gap-2">
+        <button class="h-9 flex-1 rounded-md border border-border text-sm hover:bg-accent">Continue editing</button>
+      </div>
+    </article>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — E1 Exactly one card can carry the "Active" badge and the 2px primary border.
+    E2 Card status badge is top-left, context (week / owner / edited) top-right.
+    E3 A template's third line names its gear requirement; a draft's third line names what is missing, in destructive color.
+    E4 Activating a template shows a confirm dialog naming the program it will archive (state machine, logic §2).
+    E5 Archived programs are reachable only through the Archived filter, never mixed into All.
+  </div>
+</section>
+
+<!-- 06 · PROGRAM DETAIL -->
+<section class="screen" data-screen="program" data-title="06 Program day">
+  <div class="mb-4"><h2 class="text-lg font-semibold">06 · Program detail (day tabs)</h2>
+    <p class="text-sm text-muted-foreground">Days are a rotation, not weekdays (logic §1).</p></div>
+  <div class="rounded-lg border border-border bg-card">
+    <div class="border-b border-border px-6 py-5">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="text-xl font-semibold tracking-tight">Upper/Lower 4-day</h3>
+          <p class="mt-1 text-sm text-muted-foreground">Hypertrophy · Week 3 of 8 · Active since 19 Aug 2026</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Edit</button>
+          <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Archive</button>
+          <button class="h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90">Start Push A</button>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 text-sm">
+      <button class="whitespace-nowrap rounded-md bg-secondary px-3 py-1.5 font-medium text-secondary-foreground">Day 1 · Push A</button>
+      <button class="whitespace-nowrap rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent">Day 2 · Pull A</button>
+      <button class="whitespace-nowrap rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent">Day 3 · Legs A</button>
+      <button class="whitespace-nowrap rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent">Day 4 · Upper B</button>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="text-xs text-muted-foreground">
+        <tr class="border-b border-border">
+          <th class="w-10 px-4 py-2 text-left font-medium">#</th>
+          <th class="px-2 py-2 text-left font-medium">Exercise</th>
+          <th class="px-2 py-2 text-right font-medium">Sets</th>
+          <th class="px-2 py-2 text-right font-medium">Reps</th>
+          <th class="px-2 py-2 text-right font-medium">Target load</th>
+          <th class="px-4 py-2 text-right font-medium">Rest</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        <tr><td class="num px-4 py-3 text-muted-foreground">1</td><td class="px-2 py-3"><p class="font-medium">Barbell Bench Press</p><p class="text-xs text-muted-foreground">Chest · Barbell, Bench</p></td><td class="num px-2 py-3 text-right">4</td><td class="num px-2 py-3 text-right">6–8</td><td class="num px-2 py-3 text-right">80 kg</td><td class="num px-4 py-3 text-right text-muted-foreground">150 s</td></tr>
+        <tr><td class="num px-4 py-3 text-muted-foreground">2</td><td class="px-2 py-3"><p class="font-medium">Overhead Press</p><p class="text-xs text-muted-foreground">Shoulders · Barbell</p></td><td class="num px-2 py-3 text-right">3</td><td class="num px-2 py-3 text-right">8–10</td><td class="num px-2 py-3 text-right">45 kg</td><td class="num px-4 py-3 text-right text-muted-foreground">120 s</td></tr>
+        <tr><td class="num px-4 py-3 text-muted-foreground">3</td><td class="px-2 py-3"><p class="font-medium">Incline Dumbbell Press</p><p class="text-xs text-muted-foreground">Chest · Dumbbell, Bench</p></td><td class="num px-2 py-3 text-right">3</td><td class="num px-2 py-3 text-right">10–12</td><td class="num px-2 py-3 text-right">26 kg</td><td class="num px-4 py-3 text-right text-muted-foreground">90 s</td></tr>
+        <tr><td class="num px-4 py-3 text-muted-foreground">4</td><td class="px-2 py-3"><p class="font-medium">Cable Lateral Raise</p><p class="text-xs text-muted-foreground">Shoulders · Cable</p></td><td class="num px-2 py-3 text-right">3</td><td class="num px-2 py-3 text-right">12–15</td><td class="num px-2 py-3 text-right">9 kg</td><td class="num px-4 py-3 text-right text-muted-foreground">60 s</td></tr>
+        <tr><td class="num px-4 py-3 text-muted-foreground">5</td><td class="px-2 py-3"><p class="font-medium">Triceps Rope Pushdown</p><p class="text-xs text-muted-foreground">Triceps · Cable</p></td><td class="num px-2 py-3 text-right">3</td><td class="num px-2 py-3 text-right">12–15</td><td class="num px-2 py-3 text-right">25 kg</td><td class="num px-4 py-3 text-right text-muted-foreground">60 s</td></tr>
+      </tbody>
+    </table>
+    <div class="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground">
+      <span>5 exercises · 16 working sets · est. 55 min</span>
+      <span>Last done 5 days ago · 5,900 kg</span>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — F1 Tab label format is "Day N · Name", horizontally scrollable, never wrapped.
+    F2 Column order is fixed: #, Exercise, Sets, Reps, Target load, Rest. All numeric columns right-aligned, tabular figures.
+    F3 A percentage-based target renders as "72% 1RM (≈75 kg)" in the same cell — the absolute value is always shown too.
+    F4 The header's primary button names the day it will start ("Start Push A").
+    F5 The footer line always shows totals left, last-performed right; "Never done" when there is no session.
+    F6 Below 768px the table becomes stacked rows: exercise name, then "4 × 6–8 · 80 kg · 150 s" on one muted line.
+  </div>
+</section>
+
+<!-- 07 · BUILDER -->
+<section class="screen" data-screen="builder" data-title="07 Builder">
+  <div class="mb-4"><h2 class="text-lg font-semibold">07 · Program builder</h2>
+    <p class="text-sm text-muted-foreground">Left: the day being built. Right: the library, filtered to the member's gear.</p></div>
+  <div class="grid gap-4 lg:grid-cols-[1fr_320px]">
+    <div class="rounded-lg border border-border bg-card">
+      <div class="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
+        <input value="Push / Pull / Legs" class="h-9 flex-1 min-w-[180px] rounded-md border border-input bg-background px-3 text-sm font-medium outline-none ring-ring focus:ring-2">
+        <select class="h-9 rounded-md border border-input bg-background px-2 text-sm"><option>Strength</option><option>Hypertrophy</option><option>Endurance</option><option>General</option></select>
+        <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Save draft</button>
+        <button class="h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90">Activate</button>
+      </div>
+      <div class="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 text-sm">
+        <button class="whitespace-nowrap rounded-md bg-secondary px-3 py-1.5 font-medium text-secondary-foreground">Day 1 · Push</button>
+        <button class="whitespace-nowrap rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent">Day 2 · Pull</button>
+        <button class="whitespace-nowrap rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent">Day 3 · Legs</button>
+        <button class="whitespace-nowrap rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent">+ Add day</button>
+      </div>
+      <ul class="divide-y divide-border">
+        <li class="flex items-center gap-3 px-4 py-3">
+          <button class="cursor-grab text-muted-foreground" aria-label="Reorder">⠿</button>
+          <div class="flex-1"><p class="text-sm font-medium">Barbell Bench Press</p><p class="text-xs text-muted-foreground">Chest · Barbell, Bench</p></div>
+          <input value="4" class="num h-9 w-12 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <span class="text-xs text-muted-foreground">×</span>
+          <input value="6-8" class="num h-9 w-16 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <input value="80" class="num h-9 w-16 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <span class="text-xs text-muted-foreground">kg</span>
+          <input value="150" class="num h-9 w-16 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <span class="text-xs text-muted-foreground">s</span>
+          <button class="text-muted-foreground hover:text-destructive" aria-label="Remove">✕</button>
+        </li>
+        <li class="flex items-center gap-3 px-4 py-3">
+          <button class="cursor-grab text-muted-foreground" aria-label="Reorder">⠿</button>
+          <div class="flex-1"><p class="text-sm font-medium">Overhead Press</p><p class="text-xs text-muted-foreground">Shoulders · Barbell</p></div>
+          <input value="3" class="num h-9 w-12 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <span class="text-xs text-muted-foreground">×</span>
+          <input value="8-10" class="num h-9 w-16 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <input value="45" class="num h-9 w-16 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <span class="text-xs text-muted-foreground">kg</span>
+          <input value="120" class="num h-9 w-16 rounded-md border border-input bg-background px-2 text-center text-sm">
+          <span class="text-xs text-muted-foreground">s</span>
+          <button class="text-muted-foreground hover:text-destructive" aria-label="Remove">✕</button>
+        </li>
+        <li class="px-4 py-6 text-center text-sm text-muted-foreground">Pick exercises from the library →</li>
+      </ul>
+    </div>
+    <aside class="rounded-lg border border-border bg-card p-4">
+      <input placeholder="Search library…" class="mb-3 h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none ring-ring focus:ring-2">
+      <div class="mb-3 flex flex-wrap gap-1.5 text-[11px]">
+        <span class="rounded-full bg-primary px-2 py-0.5 font-medium text-primary-foreground">Chest</span>
+        <span class="rounded-full border border-border px-2 py-0.5 text-muted-foreground">Shoulders</span>
+        <span class="rounded-full border border-border px-2 py-0.5 text-muted-foreground">Triceps</span>
+      </div>
+      <ul class="space-y-1 text-sm">
+        <li class="flex items-center justify-between rounded-md px-2 py-2 hover:bg-accent"><span>Incline Dumbbell Press</span><button class="text-primary">+</button></li>
+        <li class="flex items-center justify-between rounded-md px-2 py-2 hover:bg-accent"><span>Cable Fly</span><button class="text-primary">+</button></li>
+        <li class="flex items-center justify-between rounded-md px-2 py-2 hover:bg-accent"><span>Push-Up</span><button class="text-primary">+</button></li>
+        <li class="flex items-center justify-between rounded-md px-2 py-2 hover:bg-accent"><span>Dumbbell Floor Press</span><button class="text-primary">+</button></li>
+        <li class="flex items-center justify-between rounded-md px-2 py-2 opacity-55"><span>Pec Deck Fly</span><span class="text-[11px] text-muted-foreground">no machine</span></li>
+      </ul>
+    </aside>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — G1 Row control order: drag handle, name block, sets, "×", reps, load, unit, rest, unit, remove.
+    G2 Reps accept a range ("6-8") or a single number; the field is text, validated on blur.
+    G3 The load field's unit label follows the member's display preference and converts on save (invariant 4).
+    G4 "Activate" is disabled while any day has zero exercises; the tooltip names the offending day.
+    G5 Library items the member's gear cannot do are shown at 55% with the missing gear named, and cannot be added.
+    G6 Below 1024px the library becomes a bottom sheet opened by a floating "+ Add exercise" button.
+  </div>
+</section>
+
+<!-- 08 · ACTIVE SESSION -->
+<section class="screen" data-screen="session" data-title="08 Session">
+  <div class="mb-4"><h2 class="text-lg font-semibold">08 · Active session (logging)</h2>
+    <p class="text-sm text-muted-foreground">The screen that matters. Thumb-reachable, one set at a time, persisted per set (logic §3.2).</p></div>
+  <div class="grid gap-4 lg:grid-cols-[1fr_300px]">
+    <div class="rounded-lg border border-border bg-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-primary">In progress</p>
+          <h3 class="text-lg font-semibold tracking-tight">Push A — Chest &amp; shoulders</h3>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right"><p class="num text-lg font-semibold">32:14</p><p class="text-xs text-muted-foreground">elapsed</p></div>
+          <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Finish</button>
+        </div>
+      </div>
+      <div class="border-b border-border bg-muted/40 px-5 py-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="font-medium">Exercise 2 of 5 · Overhead Press</span>
+          <span class="text-muted-foreground">target 3 × 8–10 · 45 kg</span>
+        </div>
+        <div class="mt-2 h-1.5 w-full rounded-full bg-muted"><div class="h-1.5 w-2/5 rounded-full bg-primary"></div></div>
+      </div>
+      <div class="px-5 py-4">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-muted-foreground">
+            <tr class="border-b border-border">
+              <th class="w-12 py-2 text-left font-medium">Set</th>
+              <th class="py-2 text-right font-medium">Reps</th>
+              <th class="py-2 text-right font-medium">Load</th>
+              <th class="py-2 text-right font-medium">RPE</th>
+              <th class="w-24 py-2 text-right font-medium"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <tr class="text-muted-foreground"><td class="py-2.5">W</td><td class="num py-2.5 text-right">10</td><td class="num py-2.5 text-right">20 kg</td><td class="num py-2.5 text-right">—</td><td class="py-2.5 text-right text-success">✓</td></tr>
+            <tr><td class="py-2.5">1</td><td class="num py-2.5 text-right">10</td><td class="num py-2.5 text-right">45 kg</td><td class="num py-2.5 text-right">7.5</td><td class="py-2.5 text-right text-success">✓</td></tr>
+            <tr><td class="py-2.5">2</td><td class="num py-2.5 text-right">9</td><td class="num py-2.5 text-right">45 kg</td><td class="num py-2.5 text-right">8.5</td><td class="py-2.5 text-right text-success">✓</td></tr>
+            <tr class="bg-accent/40">
+              <td class="py-2">3</td>
+              <td class="py-2 text-right"><input value="8" class="num h-10 w-16 rounded-md border border-input bg-background px-2 text-center text-base"></td>
+              <td class="py-2 text-right"><input value="45" class="num h-10 w-20 rounded-md border border-input bg-background px-2 text-center text-base"></td>
+              <td class="py-2 text-right"><input value="9" class="num h-10 w-14 rounded-md border border-input bg-background px-2 text-center text-base"></td>
+              <td class="py-2 text-right"><button class="h-10 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground">Log set</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span class="text-muted-foreground">Quick load:</span>
+          <button class="rounded-md border border-border px-2 py-1">−2.5</button>
+          <button class="rounded-md border border-border px-2 py-1">−1.25</button>
+          <button class="rounded-md border border-border px-2 py-1">+1.25</button>
+          <button class="rounded-md border border-border px-2 py-1">+2.5</button>
+          <span class="ml-2 text-muted-foreground">Last time: 45 kg × 8, 8, 7</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between border-t border-border px-5 py-3">
+        <button class="text-sm text-muted-foreground hover:text-foreground">← Previous exercise</button>
+        <button class="text-sm text-muted-foreground hover:text-foreground">+ Add unplanned exercise</button>
+        <button class="text-sm font-medium text-primary">Next exercise →</button>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div class="rounded-lg border-2 border-primary bg-card p-5 text-center">
+        <p class="text-xs uppercase tracking-wide text-muted-foreground">Rest</p>
+        <p class="num mt-1 text-4xl font-semibold tracking-tight">1:12</p>
+        <div class="mt-3 h-1.5 w-full rounded-full bg-muted"><div class="h-1.5 w-3/5 rounded-full bg-primary"></div></div>
+        <div class="mt-3 flex gap-2">
+          <button class="h-9 flex-1 rounded-md border border-border text-sm hover:bg-accent">+30 s</button>
+          <button class="h-9 flex-1 rounded-md border border-border text-sm hover:bg-accent">Skip</button>
+        </div>
+      </div>
+      <div class="rounded-lg border border-border bg-card p-5">
+        <h4 class="mb-3 text-sm font-semibold">Session so far</h4>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between"><dt class="text-muted-foreground">Working sets</dt><dd class="num">7</dd></div>
+          <div class="flex justify-between"><dt class="text-muted-foreground">Volume</dt><dd class="num">3,140 kg</dd></div>
+          <div class="flex justify-between"><dt class="text-muted-foreground">Est. 1RM (OHP)</dt><dd class="num">58.5 kg</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — H1 Logged sets are read-only rows with a success check; only the current row has inputs. Warm-up sets show "W" instead of a number and are excluded from every total (logic §4).
+    H2 Inputs are 40px tall with 16px text — never smaller; this screen is used with sweaty thumbs.
+    H3 "Log set" persists immediately; there is no save-workout step. A failed write shows an inline retry on the row, and the row stays editable.
+    H4 The rest card counts down from the planned rest and is visually the loudest element after the primary button; when it hits zero it flashes the border, no sound by default.
+    H5 "Last time" shows the same exercise's most recent working sets, comma-separated.
+    H6 Quick-load steps are ±1.25 / ±2.5 kg (±2.5 / ±5 lb in imperial).
+    H7 Finish opens a confirm sheet listing sets logged and volume; a session with zero working sets is abandoned, not completed (logic §5).
+    H8 Below 1024px the rest card becomes a sticky bar above the bottom tab bar.
+  </div>
+</section>
+
+<!-- 09 · HISTORY -->
+<section class="screen" data-screen="history" data-title="09 History">
+  <div class="mb-4"><h2 class="text-lg font-semibold">09 · History</h2>
+    <p class="text-sm text-muted-foreground">Completed sessions are immutable; corrections are additive and marked (invariant 1).</p></div>
+  <div class="grid gap-4 lg:grid-cols-[340px_1fr]">
+    <div class="rounded-lg border border-border bg-card">
+      <div class="flex items-center justify-between border-b border-border px-4 py-3">
+        <h3 class="text-sm font-semibold">September 2026</h3>
+        <div class="flex gap-1"><button class="rounded-md border border-border px-2 py-1 text-xs">‹</button><button class="rounded-md border border-border px-2 py-1 text-xs">›</button></div>
+      </div>
+      <ul class="divide-y divide-border text-sm">
+        <li class="flex items-center justify-between bg-accent/40 px-4 py-3">
+          <div><p class="font-medium">Pull B — Back &amp; biceps</p><p class="text-xs text-muted-foreground">8 Sep · 52 min</p></div>
+          <span class="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">PR</span>
+        </li>
+        <li class="flex items-center justify-between px-4 py-3">
+          <div><p class="font-medium">Legs A</p><p class="text-xs text-muted-foreground">6 Sep · 61 min</p></div>
+          <span class="num text-xs text-muted-foreground">9,240 kg</span>
+        </li>
+        <li class="flex items-center justify-between px-4 py-3">
+          <div><p class="font-medium">Push A</p><p class="text-xs text-muted-foreground">4 Sep · 48 min</p></div>
+          <span class="num text-xs text-muted-foreground">5,900 kg</span>
+        </li>
+        <li class="flex items-center justify-between px-4 py-3 text-muted-foreground">
+          <div><p class="font-medium">Legs A</p><p class="text-xs">2 Sep · 12 min</p></div>
+          <span class="rounded-full border border-border px-2 py-0.5 text-xs">Abandoned</span>
+        </li>
+      </ul>
+    </div>
+    <div class="rounded-lg border border-border bg-card">
+      <div class="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <div>
+          <h3 class="text-lg font-semibold tracking-tight">Pull B — Back &amp; biceps</h3>
+          <p class="mt-1 text-sm text-muted-foreground">Mon 8 Sep 2026 · 18:05–18:57 · 52 min · 18 sets · 6,180 kg</p>
+        </div>
+        <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Correct a set</button>
+      </div>
+      <div class="space-y-4 px-5 py-4">
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <h4 class="text-sm font-semibold">Barbell Row</h4>
+            <span class="num text-xs text-muted-foreground">1,860 kg</span>
+          </div>
+          <p class="num text-sm text-muted-foreground">70 × 10 · 70 × 9 · 72.5 × 8 · 72.5 × 7</p>
+        </div>
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <h4 class="text-sm font-semibold">Weighted Pull-Up <span class="ml-1 rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">PR</span></h4>
+            <span class="num text-xs text-muted-foreground">1,020 kg</span>
+          </div>
+          <p class="num text-sm text-muted-foreground">+12.5 × 6 · +12.5 × 5 · +10 × 6</p>
+        </div>
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <h4 class="text-sm font-semibold">Seated Cable Row</h4>
+            <span class="num text-xs text-muted-foreground">1,700 kg</span>
+          </div>
+          <p class="num text-sm text-muted-foreground">50 × 12 · 55 × 11 <span class="text-foreground underline decoration-dotted">55 × 10</span> <span class="text-[11px] text-muted-foreground">(corrected from 55 × 12)</span></p>
+        </div>
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <h4 class="text-sm font-semibold">Dumbbell Curl <span class="ml-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">unplanned</span></h4>
+            <span class="num text-xs text-muted-foreground">960 kg</span>
+          </div>
+          <p class="num text-sm text-muted-foreground">16 × 12 · 16 × 11 · 14 × 12</p>
+        </div>
+      </div>
+      <p class="border-t border-border px-5 py-3 text-xs text-muted-foreground">One correction on this session · 9 Sep, reason: "logged the wrong rep count"</p>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — I1 Master list left, detail right at ≥1024px; below that the list is the screen and a row opens the detail as a page.
+    I2 Abandoned sessions stay in the list, muted, with an "Abandoned" chip — never hidden, never deleted (invariant 1).
+    I3 Set lines read "load × reps", separated by "·", tabular figures.
+    I4 A corrected value is underlined with a dotted decoration and followed by "(corrected from …)"; the original is never overwritten in the UI or the store.
+    I5 The footer names how many corrections a session carries and the most recent reason.
+    I6 "Correct a set" is the only mutation on this screen; there is no edit and no delete.
+  </div>
+</section>
+
+<!-- 10 · PROGRESS -->
+<section class="screen" data-screen="progress" data-title="10 Progress">
+  <div class="mb-4"><h2 class="text-lg font-semibold">10 · Progress</h2>
+    <p class="text-sm text-muted-foreground">Three questions: am I lifting more, am I doing enough, am I showing up?</p></div>
+  <div class="mb-4 flex gap-1 rounded-md bg-muted p-1 text-sm w-fit">
+    <button class="rounded-sm px-3 py-1.5 text-muted-foreground">4 weeks</button>
+    <button class="rounded-sm bg-card px-3 py-1.5 font-medium shadow-sm">3 months</button>
+    <button class="rounded-sm px-3 py-1.5 text-muted-foreground">1 year</button>
+    <button class="rounded-sm px-3 py-1.5 text-muted-foreground">All</button>
+  </div>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="rounded-lg border border-border bg-card p-5">
+      <h4 class="mb-1 text-sm font-semibold">Weekly volume</h4>
+      <p class="mb-4 text-xs text-muted-foreground">Working sets only. Primary muscle 100%, each secondary 50%.</p>
+      <svg viewBox="0 0 620 200" class="h-52 w-full" role="img" aria-label="Weekly training volume by week, rising from 12,900 to 18,420 kilograms">
+        <g stroke="hsl(var(--border))" stroke-width="1">
+          <line x1="46" y1="20" x2="610" y2="20"/><line x1="46" y1="70" x2="610" y2="70"/>
+          <line x1="46" y1="120" x2="610" y2="120"/><line x1="46" y1="170" x2="610" y2="170"/>
+        </g>
+        <g fill="hsl(var(--muted-foreground))" font-size="11" font-family="Inter, sans-serif">
+          <text x="0" y="24">20k</text><text x="4" y="74">15k</text><text x="4" y="124">10k</text><text x="8" y="174">5k</text>
+        </g>
+        <g fill="hsl(var(--primary))">
+          <rect x="60" y="104" width="42" height="66" rx="3" opacity="0.55"/>
+          <rect x="130" y="96" width="42" height="74" rx="3" opacity="0.55"/>
+          <rect x="200" y="112" width="42" height="58" rx="3" opacity="0.55"/>
+          <rect x="270" y="88" width="42" height="82" rx="3" opacity="0.7"/>
+          <rect x="340" y="80" width="42" height="90" rx="3" opacity="0.7"/>
+          <rect x="410" y="86" width="42" height="84" rx="3" opacity="0.7"/>
+          <rect x="480" y="72" width="42" height="98" rx="3" opacity="0.85"/>
+          <rect x="550" y="62" width="42" height="108" rx="3"/>
+        </g>
+        <g fill="hsl(var(--muted-foreground))" font-size="10" font-family="Inter, sans-serif" text-anchor="middle">
+          <text x="81" y="188">W31</text><text x="151" y="188">W32</text><text x="221" y="188">W33</text><text x="291" y="188">W34</text>
+          <text x="361" y="188">W35</text><text x="431" y="188">W36</text><text x="501" y="188">W37</text><text x="571" y="188">W38</text>
+        </g>
+      </svg>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-5">
+      <h4 class="mb-1 text-sm font-semibold">Volume by muscle group</h4>
+      <p class="mb-4 text-xs text-muted-foreground">This week vs. your 8-week average.</p>
+      <div class="space-y-3 text-sm">
+        <div><div class="mb-1 flex justify-between"><span>Chest</span><span class="num text-muted-foreground">4,120 kg</span></div><div class="h-2 rounded-full bg-muted"><div class="h-2 w-[82%] rounded-full bg-primary"></div></div></div>
+        <div><div class="mb-1 flex justify-between"><span>Back</span><span class="num text-muted-foreground">4,860 kg</span></div><div class="h-2 rounded-full bg-muted"><div class="h-2 w-[95%] rounded-full bg-primary"></div></div></div>
+        <div><div class="mb-1 flex justify-between"><span>Quads</span><span class="num text-muted-foreground">3,900 kg</span></div><div class="h-2 rounded-full bg-muted"><div class="h-2 w-[76%] rounded-full bg-primary"></div></div></div>
+        <div><div class="mb-1 flex justify-between"><span>Shoulders</span><span class="num text-muted-foreground">2,240 kg</span></div><div class="h-2 rounded-full bg-muted"><div class="h-2 w-[44%] rounded-full bg-primary"></div></div></div>
+        <div><div class="mb-1 flex justify-between"><span>Hamstrings</span><span class="num text-muted-foreground">1,480 kg</span></div><div class="h-2 rounded-full bg-muted"><div class="h-2 w-[29%] rounded-full bg-primary"></div></div></div>
+        <div><div class="mb-1 flex justify-between"><span class="text-muted-foreground">Calves</span><span class="num text-muted-foreground">320 kg</span></div><div class="h-2 rounded-full bg-muted"><div class="h-2 w-[6%] rounded-full bg-primary/50"></div></div></div>
+      </div>
+    </div>
+    <div class="rounded-lg border border-border bg-card">
+      <div class="border-b border-border px-5 py-3"><h4 class="text-sm font-semibold">Personal records</h4></div>
+      <table class="w-full text-sm">
+        <thead class="text-xs text-muted-foreground"><tr class="border-b border-border">
+          <th class="px-5 py-2 text-left font-medium">Exercise</th><th class="px-2 py-2 text-right font-medium">Est. 1RM</th>
+          <th class="px-2 py-2 text-right font-medium">Heaviest</th><th class="px-5 py-2 text-right font-medium">Set</th></tr></thead>
+        <tbody class="divide-y divide-border">
+          <tr><td class="px-5 py-2.5">Barbell Bench Press</td><td class="num px-2 py-2.5 text-right">104.0 kg</td><td class="num px-2 py-2.5 text-right">95 × 3</td><td class="px-5 py-2.5 text-right text-xs text-muted-foreground">2 Sep</td></tr>
+          <tr><td class="px-5 py-2.5">Back Squat</td><td class="num px-2 py-2.5 text-right">142.5 kg</td><td class="num px-2 py-2.5 text-right">130 × 4</td><td class="px-5 py-2.5 text-right text-xs text-muted-foreground">6 Sep</td></tr>
+          <tr><td class="px-5 py-2.5">Deadlift</td><td class="num px-2 py-2.5 text-right">175.0 kg</td><td class="num px-2 py-2.5 text-right">160 × 3</td><td class="px-5 py-2.5 text-right text-xs text-muted-foreground">30 Aug</td></tr>
+          <tr><td class="px-5 py-2.5">Overhead Press</td><td class="num px-2 py-2.5 text-right">58.5 kg</td><td class="num px-2 py-2.5 text-right">52.5 × 5</td><td class="px-5 py-2.5 text-right text-xs text-muted-foreground">8 Sep</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rounded-lg border border-border bg-card p-5">
+      <div class="mb-4 flex items-center justify-between">
+        <div><h4 class="text-sm font-semibold">Body weight</h4><p class="text-xs text-muted-foreground">Optional — nothing depends on it.</p></div>
+        <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Log weight</button>
+      </div>
+      <svg viewBox="0 0 620 150" class="h-40 w-full" role="img" aria-label="Body weight between 78 and 81 kilograms over three months">
+        <g stroke="hsl(var(--border))" stroke-width="1"><line x1="40" y1="20" x2="610" y2="20"/><line x1="40" y1="70" x2="610" y2="70"/><line x1="40" y1="120" x2="610" y2="120"/></g>
+        <g fill="hsl(var(--muted-foreground))" font-size="11" font-family="Inter, sans-serif"><text x="4" y="24">82</text><text x="4" y="74">80</text><text x="4" y="124">78</text></g>
+        <polyline fill="none" stroke="hsl(var(--primary))" stroke-width="2" points="60,96 130,88 200,92 270,80 340,84 410,72 480,76 550,64"/>
+      </svg>
+      <p class="num mt-1 text-sm">80.6 kg <span class="text-xs text-muted-foreground">· +0.9 kg in 3 months</span></p>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — J1 Range selector values: 4 weeks / 3 months / 1 year / All, "3 months" default.
+    J2 Every chart carries the caption that states its rule (working sets only; the 100/50 weighting) — the weighting is a presentation convention and must be visible (logic §4).
+    J3 Bars use a single hue with opacity increasing toward the present; no rainbow palettes.
+    J4 A muscle group under 10% of the largest bar renders muted, as an under-trained signal, not an alert.
+    J5 PR table columns are fixed: Exercise, Est. 1RM, Heaviest, Set (date). Sorted by most recently set.
+    J6 Body weight is a separate card that never appears inside the training charts.
+  </div>
+</section>
+
+<!-- 11 · PROFILE -->
+<section class="screen" data-screen="profile" data-title="11 Profile">
+  <div class="mb-4"><h2 class="text-lg font-semibold">11 · Profile &amp; settings</h2>
+    <p class="text-sm text-muted-foreground">Units, gear, goal, account. The gear list drives every filter in the library.</p></div>
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="rounded-lg border border-border bg-card p-5">
+      <h4 class="mb-4 text-sm font-semibold">Preferences</h4>
+      <label class="mb-1.5 block text-sm font-medium">Units</label>
+      <div class="mb-4 flex w-fit gap-1 rounded-md bg-muted p-1 text-sm">
+        <button class="rounded-sm bg-card px-4 py-1.5 font-medium shadow-sm">kg / cm</button>
+        <button class="rounded-sm px-4 py-1.5 text-muted-foreground">lb / in</button>
+      </div>
+      <label class="mb-1.5 block text-sm font-medium">Goal</label>
+      <select class="mb-4 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option>Hypertrophy</option><option>Strength</option><option>Endurance</option><option>General fitness</option></select>
+      <label class="mb-1.5 block text-sm font-medium">Experience</label>
+      <select class="mb-4 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option>Intermediate</option><option>Beginner</option><option>Advanced</option></select>
+      <label class="mb-1.5 block text-sm font-medium">Time zone</label>
+      <select class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option>Asia/Kuala_Lumpur (UTC+8)</option></select>
+      <p class="mt-2 text-xs text-muted-foreground">Weeks and streaks are counted in this zone.</p>
+    </div>
+    <div class="space-y-4">
+      <div class="rounded-lg border border-border bg-card p-5">
+        <h4 class="mb-1 text-sm font-semibold">My gear</h4>
+        <p class="mb-3 text-xs text-muted-foreground">What your gym has. Filters the library and the builder.</p>
+        <div class="flex flex-wrap gap-1.5 text-xs">
+          <button class="rounded-full bg-primary px-3 py-1.5 font-medium text-primary-foreground">Barbell</button>
+          <button class="rounded-full bg-primary px-3 py-1.5 font-medium text-primary-foreground">Dumbbell</button>
+          <button class="rounded-full bg-primary px-3 py-1.5 font-medium text-primary-foreground">Bench</button>
+          <button class="rounded-full bg-primary px-3 py-1.5 font-medium text-primary-foreground">Squat rack</button>
+          <button class="rounded-full bg-primary px-3 py-1.5 font-medium text-primary-foreground">Pull-up bar</button>
+          <button class="rounded-full bg-primary px-3 py-1.5 font-medium text-primary-foreground">Bodyweight</button>
+          <button class="rounded-full border border-border px-3 py-1.5 text-muted-foreground">Cable</button>
+          <button class="rounded-full border border-border px-3 py-1.5 text-muted-foreground">Machine</button>
+          <button class="rounded-full border border-border px-3 py-1.5 text-muted-foreground">Kettlebell</button>
+          <button class="rounded-full border border-border px-3 py-1.5 text-muted-foreground">Resistance band</button>
+          <button class="rounded-full border border-border px-3 py-1.5 text-muted-foreground">Smith machine</button>
+          <button class="rounded-full border border-border px-3 py-1.5 text-muted-foreground">Mat</button>
+        </div>
+      </div>
+      <div class="rounded-lg border border-border bg-card p-5">
+        <h4 class="mb-3 text-sm font-semibold">Account</h4>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between"><dt class="text-muted-foreground">Email</dt><dd>anas@example.com</dd></div>
+          <div class="flex justify-between"><dt class="text-muted-foreground">Member since</dt><dd>19 Aug 2026</dd></div>
+        </dl>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Change password</button>
+          <button class="h-9 rounded-md border border-border px-3 text-sm hover:bg-accent">Export my data</button>
+          <button class="h-9 rounded-md border border-destructive px-3 text-sm text-destructive hover:bg-destructive/10">Delete account</button>
+        </div>
+        <p class="mt-3 text-xs text-muted-foreground">Deleting soft-deletes your account and training data; it is recoverable for 30 days, then permanently removed (invariant 10).</p>
+      </div>
+    </div>
+  </div>
+  <div class="anno mt-4 rounded-md border border-dashed border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+    <b class="text-foreground">Annotations</b> — K1 Changing units re-renders every displayed value immediately; stored values never change (invariant 4).
+    K2 Gear chips toggle in place, saved on toggle with no explicit save button; selected = filled primary.
+    K3 The time-zone note is mandatory copy — it explains why a streak broke at an unexpected moment.
+    K4 "Delete account" is the only destructive-colored control in the product and always sits last, with the retention sentence beneath it.
+  </div>
+</section>
+
+</main>
+
+<footer class="mx-auto max-w-[1400px] px-4 pb-10 pt-2 text-xs text-muted-foreground">
+  FitForge visual reference · screens 01–11 · tokens are shadcn/ui names · this file is the source visual reference; per-feature captures live in <code>specs/NNN-name/screenshots/</code>.
+</footer>
+
+<script>
+  const screens = [...document.querySelectorAll('.screen')];
+  const tabs = document.getElementById('screen-tabs');
+  screens.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.textContent = s.dataset.title;
+    b.dataset.nav = s.dataset.screen;
+    b.className = 'rounded-md px-2 py-1 text-muted-foreground hover:bg-accent' + (i === 0 ? ' active' : '');
+    b.onclick = () => show(s.dataset.screen);
+    tabs.appendChild(b);
+  });
+  function show(name) {
+    screens.forEach(s => s.classList.toggle('active', s.dataset.screen === name));
+    document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+    window.scrollTo({ top: 0 });
+  }
+  document.getElementById('anno-toggle').onchange = e =>
+    document.body.classList.toggle('show-anno', e.target.checked);
+  document.getElementById('theme-toggle').onclick = () =>
+    document.documentElement.classList.toggle('dark');
+  addEventListener('keydown', e => {
+    if (e.key.toLowerCase() === 'a' && !/input|select|textarea/i.test(e.target.tagName)) {
+      const t = document.getElementById('anno-toggle'); t.checked = !t.checked; t.onchange({ target: t });
+    }
+    if (/^[0-9]$/.test(e.key)) { const i = (parseInt(e.key, 10) + 9) % 10; if (screens[i]) show(screens[i].dataset.screen); }
+  });
+</script>
+</body>
+</html>
