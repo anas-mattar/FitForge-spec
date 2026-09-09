@@ -24,7 +24,12 @@
   Press "A" or use the toggle to show the annotation callouts used when writing a spec's
   Visual Inventory.
 -->
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Inter is named in the Tailwind fontFamily below; without this link the reference
+       silently falls back to the system UI face and stops matching what gets built. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
     darkMode: 'class',
