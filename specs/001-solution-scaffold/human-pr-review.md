@@ -125,9 +125,9 @@ owner's recorded approval on the evidence triplet.
 | 4 | web | [34431163998](https://github.com/anas-mattar/fitforge-web/actions/runs/34431163998) | success | `8d9232dcde1185032fcf1424b44476cdbdf727ee` | recorded 2026-09-10 |
 | 5 | governance | [34433740428](https://github.com/anas-mattar/FitForge-spec/actions/runs/34433740428) | success | `ae7c38d` | recorded 2026-09-10 |
 | 6 | api | [34432663594](https://github.com/anas-mattar/fitforge-api/actions/runs/34432663594) | success | `cded3bda60869c1057d8f03be4f30b0a8370de34` | recorded 2026-09-10 |
-| 7 | api | [34436554259](https://github.com/anas-mattar/fitforge-api/actions/runs/34436554259) | success | `798ca647bf168d0d9023cdee134ab7dc25f0655d` | **NOT YET RECORDED** |
-| 8 | api | [34444566042](https://github.com/anas-mattar/fitforge-api/actions/runs/34444566042) | success | `7d3e257e795a3f050ad5df0c4a97c88e23600132` | **NOT YET RECORDED** |
-| 9 | web | [34437476386](https://github.com/anas-mattar/fitforge-web/actions/runs/34437476386) | success | `dee58e92ce28314c5dff1e1cddc8929b56ed11ed` | **NOT YET RECORDED** |
+| 7 | api | [34436554259](https://github.com/anas-mattar/fitforge-api/actions/runs/34436554259) | success | `798ca647bf168d0d9023cdee134ab7dc25f0655d` | recorded 2026-09-10 |
+| 8 | api | [34444566042](https://github.com/anas-mattar/fitforge-api/actions/runs/34444566042) | success | `7d3e257e795a3f050ad5df0c4a97c88e23600132` | recorded 2026-09-10 |
+| 9 | web | [34437476386](https://github.com/anas-mattar/fitforge-web/actions/runs/34437476386) | success | `dee58e92ce28314c5dff1e1cddc8929b56ed11ed` | recorded 2026-09-10 |
 
 **Note on phase 8's evidence — resolved 2026-09-10.** `7d3e257` originally had no CI run
 of its own: phases 8 and 7 were pushed together, so only the head `798ca64` was graded.
@@ -162,8 +162,10 @@ rather than smoothed over.
 
 ## Comments
 
-**This approval does not make the feature mergeable.** Three things are still open, none
-of which a human review closes:
+**All three blockers below were closed on 2026-09-10**, in this order: constitution 1.1.0
+merged first (it governs this feature), then the icon conflict resolved by the owner, then
+the phases certified. Kept here struck through rather than deleted, because the order they
+were closed in is part of the record.
 
 1. **Phases 7, 8 and 9 are uncertified.** `Gate Certification: ci-held`, so each needs the
    owner's approval recorded against its evidence triplet in the table above. Phase 8's
