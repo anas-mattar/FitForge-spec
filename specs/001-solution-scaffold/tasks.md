@@ -179,3 +179,40 @@ repository — the Cross-Repository Feature Rule is what lets
 - Territory may be widened only in a governance commit made **before** the code phase commit
   that relies on it. A declaration that post-dates its code FAILs even when every path is
   inside it.
+
+---
+
+## Phase 3 — Visual Compliance Loop result (T034)
+
+Measured in Chrome against `screenshots/fitforge-prototype.html` screen `today`, in both
+themes, at 1280px and — via a same-origin iframe, because the window would not resize
+below Chrome's minimum — at 357px, which is narrower than the 375px the spec requires.
+Computed styles were read rather than eyeballed; "PASS" below means the number matched.
+
+| Item | Verdict |
+|---|---|
+| VI-001 grid 220px / fluid / 1rem | PASS — `219.99px 884.02px`, gap `16px` |
+| VI-002 bordered card, --card, --radius, 0.75rem | PASS — radius `10.4px` (= 0.65rem), padding `12px` |
+| VI-003 fixed order, divider before Profile | PASS — one shared list feeds both navigations |
+| VI-004 active/inactive colours | PASS — active `rgb(244,244,245)` on `rgb(24,24,27)` weight 500; inactive `rgb(113,113,122)` |
+| VI-005 nav padding / radius / size / gap | PASS — `8px 12px`, `8.4px`, `14px`, `10px` |
+| VI-006 bottom bar replaces sidebar; 5 items; avatar | **PASS after a fix** — see below |
+| VI-007 sticky header, 1px border, 95% + blur | PASS — `sticky`, `blur(8px)`, alpha `0.95` |
+| VI-008 40px buttons, primary/secondary | PASS — `Button` primitive, `39.99px`, radius `8.4px` |
+| VI-009 tabular figures | PASS — `.num` resolves to `tabular-nums` |
+| VI-010 Inter with a real fallback | PASS — `Inter, "Inter Fallback", ui-sans-serif, system-ui, sans-serif` |
+| VI-011 light tokens | PASS — exact, incl. `--primary: 22 92% 50%`, `--radius: .65rem` |
+| VI-012 dark tokens | PASS — exact, incl. `--primary: 22 92% 54%` |
+| VI-013 both themes reachable, survives reload | PASS — class present after reload, `fitforge-theme: dark` |
+
+**The one deviation found and fixed.** At 372px the bottom bar's widest label,
+"Programs", cleared its box by **0.4px**. That is not a fit — a 360px device, a larger
+default font size, or the fallback face rendering before Inter loads all break it. The
+item padding went from `px-2` to `px-1`, giving 5.4px of headroom at 357px with no
+wrapping and no horizontal overflow. The reference does not specify the bar's internal
+padding, so this departs from nothing.
+
+**Deviation table is empty.** Two items are satisfied but not yet *exercised*, which is
+scope, not deviation: only the secondary/icon button variant appears in the shell
+(primary and destructive arrive with the screens that need them), and nothing in the
+shell displays digits yet, so `.num` is defined and first used by feature 004.
