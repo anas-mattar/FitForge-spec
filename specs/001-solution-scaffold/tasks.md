@@ -237,6 +237,68 @@ in the startup message, copied verbatim from that message, succeeds. Commit subj
 
 ---
 
+## Phase 8: Close the API review findings
+
+Added 2026-09-10 from `ai-code-review-api.md` and `ai-code-review-governance.md`.
+
+**Amendment approved by**: anas.m, 2026-09-10 (constitution I, Amendment authority)
+
+**Territory**:
+
+- `fitforge-api/src/**`
+- `fitforge-api/tests/**`
+
+### Implementation
+
+- [ ] T056 **BLOCKING, api F1 / governance F4.** `/health/ready` maps only `Unhealthy` to `degraded`, while each check maps anything short of `Healthy` to `failed`. A `Degraded` dependency therefore produces HTTP 200 and `"status":"ready"` containing `"status":"failed"` — a document that contradicts itself, which the BFF reads as `ready` while a dependency is down. Map anything short of `Healthy` to `degraded`/503 at the document level, so both halves use one rule.
+- [ ] T057 **BLOCKING, api F2.** `ConfigurationTests.Startup_without_a_connection_string_...` relies on `appsettings.json`'s empty value, and environment variables outrank it. On a machine configured the way `docs/onboarding.md` §2 says to configure it, the gate fails. Make the test independent of ambient environment.
+- [ ] T058 **BLOCKING, api F3.** The domain-purity test reads `GetReferencedAssemblies()`, which lists emitted IL references, not package references. An unused `PackageReference` on `FitForge.Domain` passes it. Assert against the project's declared references so the guard matches what ADR-001 §4.3 and the csproj comment claim.
+- [ ] T059 **api F4 / F5.** The startup `throw` guards the loose bound (`< ReadinessConsumerTimeout`) and never the binding one; `ReadinessDocumentBudget` has no production reference; the comment on the post-configure loop describes an ordering that cannot occur. Make the guard check the bound that binds, and make every comment describe what the code does.
+
+### Documentation
+
+- [ ] T060 Correct the overstated claims about the domain-purity guard in `FitForge.Domain.csproj`'s comment and ADR-001 §4.3 to match what T058 actually proves. (ADR text is governance territory — its own commit.)
+
+### Tests
+
+- [ ] T061 A test that a `Degraded` dependency yields 503 and `"status":"degraded"` — asserting the document status and the status code, not only the per-check field. The existing test named for this asserts only the field that was already correct.
+- [ ] T062 A test proving T058's guard actually fails when `FitForge.Domain` gains a package reference.
+
+**Phase exit**: `dotnet build --warnaserror && dotnet test` exits 0, and the suite still passes with `Database__ConnectionString` exported. Commit subject carries `phase 8`.
+
+---
+
+## Phase 9: Close the web review findings
+
+Added 2026-09-10 from `ai-code-review-web.md`.
+
+**Amendment approved by**: anas.m, 2026-09-10 (constitution I, Amendment authority)
+
+**Territory**:
+
+- `fitforge-web/src/**`
+
+### Implementation
+
+- [ ] T063 **BLOCKING, web F1.** `ApiHealthIndicator` casts arbitrary network JSON to `ApiHealth` and then destructures `PRESENTATION[state]`. An unrecognised value makes that `undefined` and throws during render, inside the root layout, taking the whole application down — the outcome US1 scenario 2 forbids. Validate the payload against the known values before use; the `?? "unreachable"` guard covers a missing field, not a wrong one.
+- [ ] T064 **BLOCKING, web F2.** `/api/health` catches the misconfiguration error `api-client.ts` writes and discards it, so a missing `FITFORGE_API_BASE_URL` produces `unreachable` with no server-side signal at all, pointing the operator at the wrong process. Log it server-side; keep the client answer `unreachable`.
+- [ ] T065 **web F5 / F6 / F7.** Three visual deviations the recorded loop marked PASS: `NavLink` adds `hover:text-accent-foreground` where the reference has `hover:bg-accent` only; six nav icons are invented against a reference showing none; `max-w-6xl`/`py-4` diverge from the prototype's `max-w-[1400px]`/`py-6`. Bring each to the reference, or record it as an approved deviation with a reason — not silently.
+- [ ] T066 **web F11.** `Header.tsx` hand-copies the `secondary`+`icon` button classes onto a `<Link>` without using `buttonVariants()`, and the prototype's own header comment says not to hand-roll them. Use the exported variants.
+
+### Tests
+
+- [ ] T067 **BLOCKING, web F3.** T040 and T041 were never implemented: `src/app/api/health/__tests__/route.test.ts` does not exist, so the route the browser actually calls has no test. Write it — one case per contract mapping row, plus the never-a-non-200 assertion.
+- [ ] T068 A test that an unrecognised payload value renders the indicator without throwing (T063's guard).
+- [ ] T069 **web F9.** The timeout test asserts `instanceof AbortSignal` and an unrelated constant, so `AbortSignal.timeout(1000)` would pass it. Assert the timeout that was actually applied.
+
+### Documentation
+
+- [ ] T070 Re-run the Visual Compliance Loop after T065 and **attach screenshots**, which `docs/sdlc/review-process.md` step 5 requires and the phase 3 record omitted — the reason F5 and F7 got through, and the reason the reviewer could not confirm the recorded result. (Governance territory — its own commit.)
+
+**Phase exit**: `npm run lint && npm run typecheck && npm run build && npm test` exits 0. Commit subject carries `phase 9`.
+
+---
+
 ## Dependencies & Execution Order
 
 - **Phase 1 → Phase 2**: phase 2 adds EF Core to projects phase 1 creates.

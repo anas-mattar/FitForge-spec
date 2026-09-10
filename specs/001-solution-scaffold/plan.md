@@ -230,6 +230,8 @@ Explicitly **not** approved: MediatR, AutoMapper, FluentValidation, a repository
 | 5 | Binding the checks | governance + CI | `ritual-checks` required, out-of-Territory demonstration, `docs/onboarding.md` run instructions |
 | 6 | Bound the readiness check | fitforge-api | Added 2026-09-10 — a defect phase 4's end-to-end observation found; see `tasks.md` |
 | 7 | Make the startup message's own advice work | fitforge-api | Added 2026-09-10 — a defect writing `docs/onboarding.md` found; see `tasks.md` |
+| 8 | Close the API review findings | fitforge-api | Added 2026-09-10 from the AI review; 3 BLOCKING. **Amendment approved by**: anas.m, 2026-09-10 |
+| 9 | Close the web review findings | fitforge-web | Added 2026-09-10 from the AI review; 3 BLOCKING. **Amendment approved by**: anas.m, 2026-09-10 |
 
 Phase 3 is the UI phase: the Visual Compliance Loop (`docs/sdlc/review-process.md`) runs
 against `screenshots/fitforge-prototype.html` until the deviation table is empty or
