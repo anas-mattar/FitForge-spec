@@ -448,6 +448,31 @@ Recorded rather than decided, because deciding it here is the failure the rule e
 prevent — and because the same agent that invented the icons would be grading whether
 inventing them was allowed.
 
+### Resolved 2026-09-10 — the spec was right, the reference was incomplete
+
+**Decided by**: anas.m, 2026-09-10 ("go a head", against the two options above).
+
+The prototype was the artifact at fault. `gap-2.5` on a flex row with one child is
+0.625rem of space between a label and nothing — it is not a style choice, it is the
+footprint of a missing element, and VI-005 names what belongs in it. A reference that
+reserves room for an icon and omits the icon is not a reference showing an icon-less
+navigation; it is an unfinished one.
+
+So the icons stay, and **both copies of the prototype now carry them** —
+`docs/design/fitforge-prototype.html` (project-wide) and this feature's frozen copy. The
+six paths are lifted verbatim from the lucide-react icons the implementation already
+uses, so the reference and the code cannot disagree about which glyph is which:
+`calendar-check`, `dumbbell`, `layout-list`, `history` (aliased to `rotate-ccw-clock` in
+lucide 1.43), `trending-up`, `settings`.
+
+Verified in Chrome against the served file, not assumed: all six render 16×16 inside the
+existing 10px gap, and the page has no horizontal overflow.
+`vcl-phase9-reference-with-icons.png` is the evidence.
+
+Fixing the reference rather than the code is what keeps feature 002 from re-opening this:
+it copies screens from the prototype, and an icon-less prototype would have quietly
+deleted the icons again.
+
 ---
 
 ## Phase 9 — Visual Compliance Loop, re-run with evidence (T070)

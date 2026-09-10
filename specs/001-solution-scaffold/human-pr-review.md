@@ -164,13 +164,11 @@ of which a human review closes:
 1. **Phases 7, 8 and 9 are uncertified.** `Gate Certification: ci-held`, so each needs the
    owner's approval recorded against its evidence triplet in the table above. Phase 8's
    row additionally needs the batch question settled.
-2. **The icon rung conflict is undecided** (`tasks.md`, "Phase 9 — rung conflict"). The
-   prototype shows no navigation icons but reserves `gap-2.5` for one; `spec.md` VI-005
-   names the icon. Constitution II makes that a stop-and-report, and it is still stopped.
-   SC-003 asks for an empty deviation table at merge; this is the entry in it.
-3. **Constitution 1.1.0 is unmerged** (PR #3). It was written because of this feature and
-   applies to it, and merging the feature first would mean the amendments made under it
-   were governed by a rule that had not landed.
+2. ~~**The icon rung conflict is undecided.**~~ **Resolved 2026-09-10 by the owner**: the
+   spec was right and the reference was incomplete, so both copies of the prototype gained
+   the six icons (`tasks.md`, "Phase 9 — rung conflict", Resolved section). **The
+   deviation table is now empty**, which is what SC-003 asks for at merge.
+3. ~~**Constitution 1.1.0 is unmerged.**~~ **Merged 2026-09-10** — PR #3, main `bed2c26`.
 
 **For whoever touches this area next.** The most useful artefact here is not the code, it
 is `ai-code-review-governance.md` F3: after the single owner approval, five rule changes
