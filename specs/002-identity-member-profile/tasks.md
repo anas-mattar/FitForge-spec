@@ -491,9 +491,9 @@ owed at review.
 | | |
 |---|---|
 | **Exit code** | *(pending — human-run)* |
-| Commit gated | *(filled at push)* |
-| `scope-check-repos` | *(verdict)* |
-| `git diff --stat` | *(summary)* |
+| Commit gated | `ea76672` |
+| `scope-check-repos` | `PASS phase 7 commit ea76672 (21 file(s))` |
+| `git diff --stat` | 20 files changed, 957 insertions(+), 18 deletions(-) |
 
 ---
 
