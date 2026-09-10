@@ -447,3 +447,47 @@ rung 1 nor blessed to satisfy rung 3 — and this is the report.
 Recorded rather than decided, because deciding it here is the failure the rule exists to
 prevent — and because the same agent that invented the icons would be grading whether
 inventing them was allowed.
+
+---
+
+## Phase 9 — Visual Compliance Loop, re-run with evidence (T070)
+
+The phase 3 record was unverifiable. `docs/sdlc/review-process.md` step 5 asks for
+screenshots and none were attached, so the reviewer could not confirm any of it — which
+is also how VI-004 and the container width were marked PASS while wrong. Re-run after
+T065, with the images committed beside this file.
+
+| | |
+|---|---|
+| `vcl-phase9-desktop-light-1280.jpg` | 1280px, light |
+| `vcl-phase9-desktop-dark-1422.jpg` | 1422px, dark |
+| `vcl-phase9-mobile-dark-372.png` | 372px via a same-origin iframe, dark, bottom bar in frame |
+
+Computed styles were read, not eyeballed.
+
+### The two items the phase 3 loop got wrong
+
+| Item | Phase 3 said | Measured now |
+|---|---|---|
+| VI-004 hover | PASS | **Was wrong.** Hover changed the text colour as well as the background. Now: hovered `rgb(113,113,122)`, resting `rgb(113,113,122)` — identical — while the background goes `rgba(0,0,0,0)` → `rgb(244,244,245)`. Background only, as VI-004 and the reference both say. The phase 3 loop compared resting colours and never hovered anything. |
+| Container | not checked | **Was wrong.** `max-w-6xl` (1152px) and `py-4`. Now `maxWidth: 1400px`, `paddingTop/Bottom: 24px`, header `maxWidth: 1400px` — matching the prototype's `max-w-[1400px]` and `py-6`. No VI item pinned this, which is why nothing caught it; the reference did. |
+
+### Re-measured, still PASS
+
+| Item | Evidence |
+|---|---|
+| VI-001 grid | `gridTemplateColumns: 220px 1012px`, `gap: 16px` |
+| VI-004 active | `bg rgb(244,244,245)`, `color rgb(24,24,27)`, `fontWeight 500`; inactive `rgb(113,113,122)` |
+| VI-005 nav metrics | padding `8px 12px`, radius `8.4px`, font `14px`, gap `10px` |
+| VI-006 bottom bar | Sidebar `display: none`; bottom bar present with exactly 5 items — Today, Library, Programs, History, Progress; header avatar present. At 372px every item is 71.17px wide, `scrollWidth 71`, **clipping 0**, and `scrollWidth - clientWidth = 0` on the document: no horizontal overflow |
+| VI-007 header | height `56px`, sticky, `max-w-[1400px]` |
+| VI-012 dark tokens | `--primary: 22 92% 54%`, `--card: 240 8% 9%`, `--border: 240 5% 18%`, body `rgb(14,14,17)` on `rgb(250,250,250)` |
+| VI-013 both themes | `dark` class applied and honoured; tokens switch |
+
+### Deviation table
+
+**One open item, and it is not mine to close**: VI-005's icons, the rung conflict recorded
+above. Everything else measured is either matching or fixed.
+
+The dark disc over the mobile bottom bar in the third screenshot is the Next.js dev-mode
+badge, not application UI.
