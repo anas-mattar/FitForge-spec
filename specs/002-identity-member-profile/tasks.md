@@ -567,7 +567,7 @@ fails 2 of 66. That is the branch a cookie-presence check would have got wrong.
 | | |
 |---|---|
 | Command | `npm run lint && npm run build && npm run typecheck && npm test` in `fitforge-web` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `26a083d` |
 | `scope-check-repos` | `PASS phase 8 commit 26a083d (7 file(s))` |
 | `git diff --stat` | 7 files changed, 332 insertions(+), 14 deletions(-) |
