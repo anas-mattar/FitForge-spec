@@ -180,7 +180,7 @@ later, a cost argued in A4 rather than glossed.
 | | |
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `c4c817e` |
 | `scope-check-repos` | `PASS phase 3 commit c4c817e (16 file(s))` |
 | `git diff --stat` | 16 files changed |
@@ -597,9 +597,12 @@ silently refuses to start reads like a flake and gets re-run rather than fixed.
 | | |
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
-| **Exit code** | *(pending — human-run)* |
-| Commit gated | *(filled at push)* |
-| `scope-check-repos` | *(verdict)* |
-| `git diff --stat` | *(summary)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
+| Commit gated | `43f22a5` |
+| `scope-check-repos` | `PASS phase 11 commit 43f22a5 (3 file(s))` |
+| `git diff --stat` | 3 files changed |
 
 The run needs Docker or LocalDB available. LocalDB was used here.
+
+**Phase 11 is complete**, and phase 3 is closed with it — T105–T107 are the tests phase 3
+was missing.
