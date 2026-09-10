@@ -548,12 +548,12 @@ three session tests moved here pass, and each fails when the behaviour it covers
 
 ### Implementation
 
-- [ ] T103 Add `tests/FitForge.Api.Tests/SqlServerDatabase.cs` — a fixture that creates a uniquely-named database, applies **the migrations** (not `EnsureCreated`, which builds from the model and would test a schema that never ships), and drops it on dispose.
-- [ ] T104 Resolve the connection string from `FITFORGE_TEST_SQL`, falling back to LocalDB so a developer on Windows needs no setup. **No credential in source** (constitution VI).
-- [ ] T105 (was T029) Resolve succeeds for a live session; fails for expired, for revoked, for unknown, and for a session whose member is soft-deleted. Four cases, one answer.
-- [ ] T106 (was T030) The stored `TokenHash` is not the token, and no column anywhere holds it — asserted against the database, not against the code.
-- [ ] T107 (was T031) Sliding expiry extends at most once per hour.
-- [ ] T108 Add an `mssql/server` service container to `.github/workflows/project-gate.yml` and pass `FITFORGE_TEST_SQL` to the test step. The `sa` password comes from a repository **secret**, never inlined — and the workflow fails loudly if the secret is absent rather than silently skipping the database tests.
+- [x] T103 Add `tests/FitForge.Api.Tests/SqlServerDatabase.cs` — a fixture that creates a uniquely-named database, applies **the migrations** (not `EnsureCreated`, which builds from the model and would test a schema that never ships), and drops it on dispose.
+- [x] T104 Resolve the connection string from `FITFORGE_TEST_SQL`, falling back to LocalDB so a developer on Windows needs no setup. **No credential in source** (constitution VI).
+- [x] T105 (was T029) Resolve succeeds for a live session; fails for expired, for revoked, for unknown, and for a session whose member is soft-deleted. Four cases, one answer.
+- [x] T106 (was T030) The stored `TokenHash` is not the token, and no column anywhere holds it — asserted against the database, not against the code.
+- [x] T107 (was T031) Sliding expiry extends at most once per hour.
+- [x] T108 Add an `mssql/server` service container to `.github/workflows/project-gate.yml` and pass `FITFORGE_TEST_SQL` to the test step. The `sa` password comes from a repository **secret**, never inlined — and the workflow fails loudly if the secret is absent rather than silently skipping the database tests.
 
 ### Why this earns its own gate
 
@@ -564,5 +564,42 @@ the cross-member read test that is the whole reason this feature is Critical, is
 something only against a database that actually enforces the unique index and the foreign
 key. This phase is the prerequisite for the feature's headline claim being testable at all.
 
-**Gate (human-run)**: `dotnet build --warnaserror && dotnet test` in `fitforge-api`.
-The run needs Docker or LocalDB available.
+### What the fixture proved on its first run
+
+The 12 session tests pass against **real SQL Server** (LocalDB on the authoring host).
+That run applied `AddMemberAndProfile` and `AddSessionAndSignInAttempt` for real, which
+**retires A1's residual**: T011 could not catch a migration that is valid C# but invalid
+SQL, and both now execute against the engine on every test run. A1's "what is lost" note
+is answered rather than merely acknowledged.
+
+**Mutation-checked**, since the whole argument for option (a) was fidelity:
+
+| Mutation | Result |
+|---|---|
+| the join uses `IgnoreQueryFilters()`, so a soft-deleted member's session resolves | 3 of 12 fail |
+| the slide updates the entity but never calls `SaveChangesAsync` | (same run) |
+
+Both reverted; 12 of 12 pass. Note what the first mutation means: it is invariant 2's
+failure mode, and the test catches it only because the query filter is a real filter on a
+real database.
+
+**CI**: `mcr.microsoft.com/mssql/server:2022-latest` as a service container, with a health
+check, and the `sa` password from a repository **secret** — never inlined. A guard step
+fails the job with a legible error when the secret is missing, because a container that
+silently refuses to start reads like a flake and gets re-run rather than fixed.
+
+> **Action required before this branch's CI can pass**: add `MSSQL_SA_PASSWORD` under
+> *Settings → Secrets and variables → Actions* in `anas-mattar/fitforge-api`. Any strong
+> value; it protects a throwaway container that lives for the length of one job.
+
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(filled at push)* |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | *(summary)* |
+
+The run needs Docker or LocalDB available. LocalDB was used here.
