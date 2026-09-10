@@ -582,21 +582,88 @@ fails 2 of 66. That is the branch a cookie-presence check would have got wrong.
 
 ### Implementation
 
-- [ ] T088 [P] Add `src/app/api/bff/me/preferences/route.ts`, `me/password/route.ts`, `me/route.ts` (DELETE) per `contracts/member.md` §6.
-- [ ] T089 Build `src/app/(app)/profile/page.tsx` to VI-017 through VI-027 — two equal columns at ≥1024px (VI-017), the Preferences card left, the Account card right, **no "My gear" card and no "Export my data" button** (the two declared deviations).
-- [ ] T090 Units as a width-to-content segmented control (VI-019); goal, experience and time-zone selects in the orders VI-020 to VI-022 fix.
-- [ ] T091 Render VI-023's copy verbatim — "Weeks and streaks are counted in this zone." It is mandatory (K3), and it is the explanation a member needs when a streak breaks at an unexpected hour.
-- [ ] T092 Render VI-027's copy verbatim, and cite the same 30-day constant phase 6 defined (T062).
-- [ ] T093 "Delete account" is the only destructive-colored control in the product and always sits last (VI-025, VI-026, K4).
-- [ ] T094 Extend `src/lib/units.ts` for display conversion, and use it **at render only** — nothing converted is ever sent back (D8, FR-011).
+- [x] T088 [P] Add `src/app/api/bff/me/preferences/route.ts`, `me/password/route.ts`, `me/route.ts` (DELETE) per `contracts/member.md` §6.
+- [x] T089 Build `src/app/(app)/profile/page.tsx` to VI-017 through VI-027 — two equal columns at ≥1024px (VI-017), the Preferences card left, the Account card right, **no "My gear" card and no "Export my data" button** (the two declared deviations).
+- [x] T090 Units as a width-to-content segmented control (VI-019); goal, experience and time-zone selects in the orders VI-020 to VI-022 fix.
+- [x] T091 Render VI-023's copy verbatim — "Weeks and streaks are counted in this zone." It is mandatory (K3), and it is the explanation a member needs when a streak breaks at an unexpected hour.
+- [x] T092 Render VI-027's copy verbatim, and cite the same 30-day constant phase 6 defined (T062).
+- [x] T093 "Delete account" is the only destructive-colored control in the product and always sits last (VI-025, VI-026, K4).
+- [x] T094 Extend `src/lib/units.ts` for display conversion, and use it **at render only** — nothing converted is ever sent back (D8, FR-011).
 
 ### Tests and the loop
 
-- [ ] T095 [P] Vitest — switching units re-renders every displayed value and sends no measurement to the BFF (VI-028).
-- [ ] T096 **Visual Compliance Loop** against `screenshots/11-profile-desktop-{light,dark}.jpg`, both themes, until the deviation table is empty or holds only the declared deviations.
-- [ ] T097 Verify the single-column layout below 1024px live (VI-017).
+- [x] T095 [P] Vitest — switching units re-renders every displayed value and sends no measurement to the BFF (VI-028).
+- [x] T096 **Visual Compliance Loop** against `screenshots/11-profile-desktop-{light,dark}.jpg`, both themes, until the deviation table is empty or holds only the declared deviations.
+- [x] T097 Verify the single-column layout below 1024px live (VI-017).
 
-**Gate (human-run)**: as phase 7.
+### Visual Compliance Loop — result
+
+Measured against a running application, both themes, four widths.
+
+| VI | Required | Measured |
+|---|---|---|
+| VI-017 | two **equal** columns at ≥1024px, 16px gap; one below | `498.009px 498.021px`, gap 16px; one column at 1023/768/390 |
+| VI-018 | cards rounded, 1px border, 20px padding, heading 14px semibold | 20px, 14px/600 |
+| VI-019 | units segmented **width to content**, 16px/6px padding | `inline-flex`, 158px wide, `6px 16px` |
+| VI-020 | goal select 40px, options Hypertrophy → General fitness | 40px; order confirmed |
+| VI-021 | experience 40px, Intermediate → Beginner → Advanced | 40px; order confirmed |
+| VI-022 | IANA name with UTC offset in parentheses | `Asia/Kuala_Lumpur (UTC+8)` — **after a fix, see below** |
+| VI-023 | the copy, verbatim and mandatory | "Weeks and streaks are counted in this zone." |
+| VI-024 | Email and Member since, 14px, 8px apart, `19 Aug 2026` | both rows, 8px, `19 Aug 2026` |
+| VI-025 | wrapping row of 36px buttons, Delete account last | 36px, `flex-wrap: wrap`, last at every width |
+| VI-026 | the ONLY destructive-coloured control | exactly **1** destructive-coloured element on the page |
+| VI-027 | the retention copy, verbatim, citing 30 days | rendered verbatim |
+| VI-028 | units re-render, nothing stored changes | `167.5 cm` → `5' 6"`; the only request was `{"units":"Imperial"}` |
+| both themes | geometry identical, colours differ | geometry byte-identical; card fill differs |
+
+**Two deviations found, both fixed.**
+
+**VI-022 — the wrong word.** `Intl`'s `shortOffset` renders `GMT+8` in `en-GB`. The
+reference writes `UTC+8`. Same instant, different word, and the reference fixes the word.
+Only visible by reading the rendered option, which is what the loop is for.
+
+**A dark-mode defect, and it is feature 001's.** "Change password" measured
+`rgb(9, 9, 11)` in **both** themes while every sibling moved to `rgb(250, 250, 250)` —
+dark text on a dark card. Cause: a `<button>` carries the user agent's
+`color: buttontext`, which does not inherit, so `button.tsx`'s `secondary` and `ghost`
+variants — which set no colour — render near-black whatever the theme. Fixed in
+`button.tsx` with an explicit `text-foreground`, because the profile screen cannot meet
+its dark reference while it stands. Recorded as a 001 defect found by 002: `secondary`
+had simply never been used on a screen anyone checked in dark.
+
+**How the final re-check was done, and its limit.** The compiled CSS contains
+`.text-foreground{color:hsl(var(--foreground))}` and the class is on the element, which
+resolves through the same `--foreground` token measured flipping on `body`, `h2` and
+`dd`. The live dark-mode re-probe after the fix did **not** run: the browser tooling
+stopped responding. So the fix is proven by construction, not by a second measurement.
+A human running the profile screen in dark mode is owed at review, and it is one glance.
+
+### Three environment traps, recorded so nobody re-chases them
+
+| Symptom | Cause | Not a product defect because |
+|---|---|---|
+| No client component responded — even feature 001's theme toggle | browsing `127.0.0.1` instead of `localhost`; Next blocks cross-origin dev resources and hydration never completes | it works on `localhost`, and in production |
+| `text-foreground` had no matching CSS rule | the dev server had not recompiled the stylesheet | the production build contains the rule |
+| Phase 8's route-protection tests began failing | vitest's 5s default; the `(app)` layout's module graph grew when this phase added the profile screen, and the cold transform took 5.8s on this filesystem | every assertion still held — it failed on **time**. The budget was raised with the reason recorded in the file, which is what distinguishes it from raising a timeout to hide a hang |
+
+### The API side is stubbed, and that is stated
+
+The screen was graded against a stub API serving a fixed member, not the C# API — whose
+own behaviour is covered by its 128 tests. What the loop exercised is the real page, the
+real components, the real BFF routes and the real cookie. What it did **not** exercise is
+this screen against the real API end to end, and that belongs in the human review.
+
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `npm run lint && npm run build && npm run typecheck && npm test` in `fitforge-web` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | `a3ca4b9` |
+| `scope-check-repos` | `PASS phase 9 commit a3ca4b9 (13 file(s))` |
+| `git diff --stat` | 13 files changed, 883 insertions(+), 5 deletions(-) |
+
+**This is the last implementation phase.** Phase 10 is governance only.
 
 ---
 
