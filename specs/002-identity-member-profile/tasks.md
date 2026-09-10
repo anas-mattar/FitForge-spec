@@ -109,19 +109,38 @@ about SC-002 — the same standard applies to the tests that reach it.
 
 ### Implementation
 
-- [ ] T013 Add `src/FitForge.Domain/Members/PasswordPolicy.cs` — D1 as a pure function returning the violated rule or nothing: minimum 10, maximum 256, and not equal to the email case-insensitively. No composition rules (FR-002 forbids them).
-- [ ] T014 Add `Microsoft.Extensions.Identity.Core` to **`FitForge.Api` only** (plan §5). Confirm `FitForge.Domain` still has zero package references.
-- [ ] T015 Add `src/FitForge.Api/Features/Identity/PasswordHashing.cs` — `PasswordHasher<Member>` configured with `IterationCount = 210_000` as a named constant carrying its OWASP citation (D2). A magic literal never gets raised.
-- [ ] T016 Implement **rehash on verify**: when the hasher reports `SuccessRehashNeeded`, rewrite the stored hash inside the same request. This is what makes D2 reversible, and it is built now while there is one member to test it on.
-- [ ] T017 Register the hasher in DI, and generate the **fixed decoy hash** at startup with the same parameters (D6). It is a field, not a per-request computation.
+- [x] T013 Add `src/FitForge.Domain/Members/PasswordPolicy.cs` — D1 as a pure function returning the violated rule or nothing: minimum 10, maximum 256, and not equal to the email case-insensitively. No composition rules (FR-002 forbids them).
+- [x] T014 ~~Add `Microsoft.Extensions.Identity.Core` to **`FitForge.Api` only**~~ — **not added; none was needed.** The shared framework provides `PasswordHasher<TUser>` on .NET 10, and referencing the package raises NU1510, which `TreatWarningsAsErrors` makes a build failure. Feature 002 adds no package. Recorded in `plan.md` §5; a removal needs no approval. `FitForge.Domain` confirmed still at zero package references.
+- [x] T015 Add `src/FitForge.Api/Features/Identity/PasswordHashing.cs` — `PasswordHasher<Member>` configured with `IterationCount = 210_000` as a named constant carrying its OWASP citation (D2). A magic literal never gets raised.
+- [x] T016 Implement **rehash on verify**: when the hasher reports `SuccessRehashNeeded`, rewrite the stored hash inside the same request. This is what makes D2 reversible, and it is built now while there is one member to test it on.
+- [x] T017 Register the hasher in DI, and generate the **fixed decoy hash** at startup with the same parameters (D6). It is a field, not a per-request computation.
 
 ### Tests
 
-- [ ] T018 [P] `FitForge.Domain.Tests` — the policy: 9 characters rejected, 10 accepted, 257 rejected, password equal to the email rejected in either case.
-- [ ] T019 `FitForge.Api.Tests` — a hash verifies against its own password and fails against a different one; two hashes of the same password differ (the salt is real).
-- [ ] T020 `FitForge.Api.Tests` — rehash-on-verify: a hash produced at a lower iteration count verifies **and** is rewritten. The test asserts the stored value changed, not that a method was called.
+- [x] T018 [P] `FitForge.Domain.Tests` — the policy: 9 characters rejected, 10 accepted, 257 rejected, password equal to the email rejected in either case.
+- [x] T019 `FitForge.Api.Tests` — a hash verifies against its own password and fails against a different one; two hashes of the same password differ (the salt is real).
+- [x] T020 `FitForge.Api.Tests` — rehash-on-verify: a hash produced at a lower iteration count verifies **and** is rewritten. The test asserts the stored value changed, not that a method was called.
 
-**Gate (human-run)**: as phase 1.
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(filled at push)* |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | *(summary)* |
+
+**Mutation-checked, not assumed.** The two assertions this phase rests on were each broken
+on purpose to confirm they fail:
+
+| Mutation | Result |
+|---|---|
+| `Verify` stops rewriting `PasswordHash` on `SuccessRehashNeeded` | T020 fails |
+| `VerifyDecoy` returns before verifying | the decoy test fails |
+
+Both reverted; 14 of 14 pass. A test that passes both ways is not evidence, and for the
+two mechanisms that make D2 reversible and FR-004 true that standard is not optional.
 
 ---
 

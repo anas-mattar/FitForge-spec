@@ -344,6 +344,20 @@ be added without amending this plan (constitution IV):
 `AddIdentity(...)` registration. Those bring a schema and an opinion about authentication
 that would displace this plan's design.
 
+> **Withdrawn at phase 2 — feature 002 adds no package at all.**
+>
+> On .NET 10 the ASP.NET Core shared framework already provides these types, so the
+> reference is not merely unnecessary, it is rejected: `dotnet restore` raises **NU1510**
+> (*"will not be pruned… likely unnecessary"*), which `TreatWarningsAsErrors` turns into a
+> build failure. Verified by probe — `PasswordHasher<T>` resolves and hashes with no
+> package reference present.
+>
+> Same shape as 001 §5's `Microsoft.Extensions.Diagnostics.HealthChecks` finding, and
+> recorded for the same reason: so a later reader does not add it back believing it was
+> ever needed. **No approval sought**: removing an approved package is a narrowing, and
+> 001's plan already records that removals need none. The claim "this plan adds one
+> package" is now false and this note is what makes the plan true again.
+
 **fitforge-web**: **none**. The shadcn/ui primitives this feature needs (`input`, `label`,
 `select`, `card`) are generated source under `src/components/ui/`, ours to edit — a
 generator, not a runtime dependency (ADR-001 §4.6).
