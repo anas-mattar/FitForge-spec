@@ -198,6 +198,17 @@ changes already-certified code in a repository no other open phase declares.
 **Territory**:
 
 - `fitforge-api/src/**`
+- `fitforge-api/tests/**`
+
+**Amendment approved by**: anas.m, 2026-09-10 (constitution I, Amendment authority) —
+`tests/**` was missing from the original declaration even though T055 asks for a test, and
+`scope-check-repos.ps1` FAILed the phase-7 commit for it. Declared here before the phase
+is re-committed, per the remediation the check itself prints.
+
+**Ordering, discovered during implementation.** Phase 7 lands **after** phase 8, not
+before. Adding the `UserSecretsId` is what makes api F2 bite — once a developer follows
+the now-working advice a user secret exists, and `ConfigurationTests` failed on their
+machine while staying green in CI. T057 must land first.
 
 **The defect.** `DatabaseOptions.MissingConnectionStringMessage` — the message a developer
 sees when the API refuses to start — tells them to run
