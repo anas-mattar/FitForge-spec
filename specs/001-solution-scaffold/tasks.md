@@ -297,3 +297,35 @@ padding, so this departs from nothing.
 scope, not deviation: only the secondary/icon button variant appears in the shell
 (primary and destructive arrive with the screens that need them), and nothing in the
 shell displays digits yet, so `.num` is defined and first used by feature 004.
+
+---
+
+## Phase 5 — SC-005 demonstration (T045)
+
+Run 2026-09-10 against `fitforge-api` on branch `001-solution-scaffold`. A commit
+carrying a `phase 6` subject touched two paths outside that phase's declared Territory
+(`fitforge-api/src/**`, `fitforge-api/tests/**`). Made locally, never pushed, reverted
+immediately afterwards.
+
+```text
+scope-repos: fitforge-api: FAIL phase 6 commit 9422e6f: fitforge-api/README.md not in territory
+scope-repos: fitforge-api: FAIL phase 6 commit 9422e6f: fitforge-api/docs/scope-demo.md not in territory
+scope-repos: fitforge-api: remediation - revert the undeclared change, or amend the phase's
+  **Territory** in specs/001-solution-scaffold/tasks.md (owner approval) in a governance
+  commit made BEFORE the code phase commit, then re-commit the phase
+scope-repos: fitforge-web: PASS phase 4 commit 8d9232d (8 file(s))
+EXIT=1
+```
+
+Then `git reset --hard cded3bd`, and the same command again:
+
+```text
+scope-repos: fitforge-api: PASS phase 6 commit cded3bd (3 file(s))
+scope-repos: fitforge-web: PASS phase 4 commit 8d9232d (8 file(s))
+EXIT=0
+```
+
+Both offending paths are named individually, the remediation is stated rather than left
+to be inferred, the exit code is non-zero so CI cannot pass over it, and the second
+repository is still graded independently rather than being abandoned at the first
+failure. SC-005 satisfied.
