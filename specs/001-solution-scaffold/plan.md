@@ -92,7 +92,9 @@ fitforge-web/
 
 ## 4. ADR-001 — FitForge API architecture
 
-**Status**: Proposed in this plan; Accepted on merge of 001 (constitution IV bootstrap clause).
+**Status**: **Accepted 2026-09-10** by the owner (anas.m). Under constitution IV's bootstrap
+clause this ADR is FitForge's architecture from now until 001 merges; afterwards it is "the
+existing architecture" every later feature must follow.
 **Context**: FitForge's domain is small in surface but has real, stated invariants — a
 completed session is immutable and corrected only additively; personal records, volume,
 streak and adherence are *derived and never stored*. Those two rules are exactly the ones

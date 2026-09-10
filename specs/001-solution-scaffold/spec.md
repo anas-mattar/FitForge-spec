@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-solution-scaffold`
 **Created**: 2026-09-10
-**Status**: Draft
+**Status**: Approved 2026-09-10 (owner: anas.m)
 **Delivery Level**: Standard
 **Input**: User description: "Scaffold both repositories to a gate-green baseline and record the architecture ADR"
 
