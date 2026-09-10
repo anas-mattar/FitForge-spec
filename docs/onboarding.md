@@ -47,34 +47,33 @@ cd fitforge-api
 dotnet restore
 ```
 
-Then supply the connection string as an environment variable and run. Bash:
+Then set the connection string and run. For local development:
 
 ```bash
-export Database__ConnectionString="Server=localhost;Database=FitForge;Trusted_Connection=True;TrustServerCertificate=True"
+dotnet user-secrets set "Database:ConnectionString"   "Server=localhost;Database=FitForge;Trusted_Connection=True;TrustServerCertificate=True"   --project src/FitForge.Api
 dotnet run --project src/FitForge.Api
 ```
 
-PowerShell:
+User secrets are read **only in the Development environment**, which is what
+`dotnet run` uses. Anywhere else — a container, CI, a deployed host — use the
+environment variable instead:
+
+```bash
+export Database__ConnectionString="Server=...;Database=FitForge;..."
+```
 
 ```powershell
-$env:Database__ConnectionString = "Server=localhost;Database=FitForge;Trusted_Connection=True;TrustServerCertificate=True"
-dotnet run --project src/FitForge.Api
+$env:Database__ConnectionString = "Server=...;Database=FitForge;..."
 ```
 
 The double underscore is not a typo — it is how .NET spells a configuration section
 separator in an environment variable.
 
-The connection string is **required to start**. Without it the process stops immediately with
-a message naming the setting — that is deliberate, not a bug: a missing value should cost you
-one message, not an afternoon of debugging a request that fails later for an
-unrelated-looking reason. The value never goes in `appsettings.json`; only the name lives in
-source.
-
-> **Known gap.** That startup message also suggests `dotnet user-secrets`, which does not
-> work yet: `FitForge.Api.csproj` has no `UserSecretsId`, so the command exits with
-> *"Could not find the global property 'UserSecretsId'"*. Use the environment variable above
-> until phase 7 fixes it (`specs/001-solution-scaffold/tasks.md`). Found by following this
-> file, which is what it is for.
+The connection string is **required to start**. Without it the process stops immediately
+with a message naming the setting — that is deliberate, not a bug: a missing value should
+cost you one message, not an afternoon of debugging a request that fails later for an
+unrelated-looking reason. The value never goes in `appsettings.json`; only the name lives
+in source.
 
 It listens on `http://localhost:5212`. Verify:
 

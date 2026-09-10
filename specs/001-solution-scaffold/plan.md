@@ -146,8 +146,18 @@ FitForge.Api  ──►  FitForge.Infrastructure  ──►  FitForge.Domain  �
 
 - `FitForgeDbContext`, every entity configuration and every migration live there and nowhere
   else.
-- `FitForge.Domain` MUST NOT reference EF Core. Enforced by the absence of the package
-  reference — adding it is a visible, reviewable diff, which is the point.
+- `FitForge.Domain` MUST NOT reference EF Core, or any other package. Enforced by a test
+  that reads `FitForge.Domain.csproj` and asserts it declares no `PackageReference` and no
+  `ProjectReference`, so adding one fails the gate rather than merely producing a
+  reviewable diff.
+
+  **Amendment approved by**: anas.m, 2026-09-10 (constitution I, Amendment authority).
+  Corrected after `ai-code-review-api.md` F3: until phase 8 the test read
+  `GetReferencedAssemblies()`, which lists assemblies the compiler emitted references to —
+  so an unused package reference passed it, and the guard only bit once someone wrote the
+  line it existed to prevent. Demonstrated, not argued: an unused `Newtonsoft.Json` on
+  `FitForge.Domain` passes the old test and fails the new one. This bullet, the csproj
+  comment and the phase 1 commit message all claimed more than the code delivered.
 - Raw SQL and ADO.NET MUST NOT appear outside `FitForge.Infrastructure`.
 - Feature handlers in `FitForge.Api` MAY inject `FitForgeDbContext` and query through it.
   There is no repository abstraction: `DbSet<T>` already is one, and wrapping it would be

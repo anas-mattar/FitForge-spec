@@ -270,6 +270,12 @@ Added 2026-09-10 from `ai-code-review-api.md` and `ai-code-review-governance.md`
 
 - [ ] T060 Correct the overstated claims about the domain-purity guard in `FitForge.Domain.csproj`'s comment and ADR-001 §4.3 to match what T058 actually proves. (ADR text is governance territory — its own commit.)
 
+  **Done 2026-09-10, partially.** ADR-001 §4.3 corrected with the approver line. The
+  csproj comment was left alone: re-read against T058 it does not overstate — it claims a
+  reviewable diff, which was always true — it now *under*states, since a machine guard
+  exists. Improving it means touching `fitforge-api/src/**`, which no open phase declares,
+  and an incomplete-but-true comment does not justify a phase of its own.
+
 ### Tests
 
 - [ ] T061 A test that a `Degraded` dependency yields 503 and `"status":"degraded"` — asserting the document status and the status code, not only the per-check field. The existing test named for this asserts only the field that was already correct.
@@ -410,3 +416,34 @@ Both offending paths are named individually, the remediation is stated rather th
 to be inferred, the exit code is non-zero so CI cannot pass over it, and the second
 repository is still graded independently rather than being abandoned at the first
 failure. SC-005 satisfied.
+
+---
+
+## Phase 9 — rung conflict, escalated not resolved (T065 / web F6)
+
+`ai-code-review-web.md` F6 reports six invented navigation icons. Checking it found
+something the finding did not: the two authorities disagree with each other.
+
+| Rung | Says |
+|---|---|
+| 1 — `screenshots/fitforge-prototype.html` | The sidebar has no icons. Its items are `<a class="flex items-center gap-2.5 ...">Library</a>` — a `gap-2.5` flex row with one child, which is a gap between nothing and a label. Zero `<svg>` in the navigation. |
+| 3 — `spec.md` VI-005 | "Navigation items are 0.75rem × 0.5rem padded, radius `md`, 0.875rem text, **0.625rem gap between icon and label**." `gap-2.5` is exactly 0.625rem. |
+
+So the prototype carries the spacing an icon would need and omits the icon, and the spec
+names the icon. One of them is wrong and it is not clear which.
+
+Constitution II is explicit: "If a higher rung and a lower rung conflict, implementation
+MUST stop and the conflict MUST be reported." `CLAUDE.md` repeats it: never silently
+choose. The icons are therefore **left exactly as they are** — neither removed to satisfy
+rung 1 nor blessed to satisfy rung 3 — and this is the report.
+
+**The decision needed**, from the owner:
+
+- **Prototype is right** → remove the six icons, and drop "between icon and label" from
+  VI-005. Its `gap-2.5` then becomes dead spacing that should also go.
+- **Spec is right** → keep the icons, and add them to the prototype so feature 002 does
+  not copy an icon-less screen and re-open this.
+
+Recorded rather than decided, because deciding it here is the failure the rule exists to
+prevent — and because the same agent that invented the icons would be grading whether
+inventing them was allowed.
