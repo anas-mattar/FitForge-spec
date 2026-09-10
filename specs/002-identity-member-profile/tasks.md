@@ -319,19 +319,58 @@ assumed away. A reviewer reading only T054 would over-trust it.
 
 ### Implementation
 
-- [ ] T061 Add `src/FitForge.Api/Hosting/Retention/RetentionService.cs` — a `BackgroundService` running daily (D9). No package, no scheduler.
-- [ ] T062 Add the retention window as one named constant, **30 days**, cited by both the purge and the UI copy that phase 9 renders (VI-027). If it changes, both change or neither does.
-- [ ] T063 Permanently remove members whose `DeletedAtUtc` is more than the window past, together with every row they own, in one transaction per member.
-- [ ] T064 Prune `SignInAttempt` rows older than their 15-minute window — the table is a counter, not a log, and keeping it is keeping personal data past its usefulness (invariant 10).
-- [ ] T065 Log what was removed as counts only: never an email, never an address, never an internal `Id` (D12).
+- [x] T061 Add `src/FitForge.Api/Hosting/Retention/RetentionService.cs` — a `BackgroundService` running daily (D9). No package, no scheduler.
+- [x] T062 Add the retention window as one named constant, **30 days**, cited by both the purge and the UI copy that phase 9 renders (VI-027). If it changes, both change or neither does.
+- [x] T063 Permanently remove members whose `DeletedAtUtc` is more than the window past, together with every row they own, in one transaction per member.
+- [x] T064 Prune `SignInAttempt` rows older than their 15-minute window — the table is a counter, not a log, and keeping it is keeping personal data past its usefulness (invariant 10).
+- [x] T065 Log what was removed as counts only: never an email, never an address, never an internal `Id` (D12).
 
 ### Tests
 
-- [ ] T066 **[D13-1]** `FitForge.Api.Tests` — enumerate every `FitForgeDbContext` entity type carrying a member reference and assert each is named in the purge. A later feature adding a member-owned table without extending the purge fails the gate rather than silently orphaning personal data (D9).
-- [ ] T067 [P] `FitForge.Api.Tests` — a member soft-deleted 31 days ago is removed; one soft-deleted 29 days ago is not; one not deleted at all is not.
-- [ ] T068 `FitForge.Api.Tests` — the purge removes the member's `Profile` and `Session` rows too, leaving no orphan.
+- [x] T066 **[D13-1]** `FitForge.Api.Tests` — enumerate every `FitForgeDbContext` entity type carrying a member reference and assert each is named in the purge. A later feature adding a member-owned table without extending the purge fails the gate rather than silently orphaning personal data (D9).
+- [x] T067 [P] `FitForge.Api.Tests` — a member soft-deleted 31 days ago is removed; one soft-deleted 29 days ago is not; one not deleted at all is not.
+- [x] T068 `FitForge.Api.Tests` — the purge removes the member's `Profile` and `Session` rows too, leaving no orphan.
 
-**Gate (human-run)**: as phase 1.
+### D13-1 mutation-checked in both directions
+
+The guard is the point of this phase, so it was attacked rather than admired:
+
+| Mutation | Result |
+|---|---|
+| drop `Profile` from `RetentionPolicy.Purged` — a member-owned entity nobody purges | fails |
+| add `"WorkoutSession"` to the set — a name for an entity that does not exist | fails |
+
+The second direction matters as much as the first. Without it, a stale name left behind
+after a rename would let the completeness test pass while comparing against a schema
+nobody has any more — green for the wrong reason, which is the failure mode this whole
+feature keeps finding.
+
+### Two decisions a reviewer should weigh
+
+**A first pass runs five minutes after startup, not a day later.** An instance restarted
+daily would otherwise never purge anything: the timer would reset before it ever fired,
+and invariant 10's window would quietly never close. The bug would be invisible — nothing
+errors, nothing logs, data simply is not erased.
+
+**One transaction per member, not one for the batch.** A failure part way through leaves
+earlier members fully removed and later ones untouched, never a member half-removed with
+rows referencing nothing. The foreign keys are RESTRICT, so children are deleted first —
+that ordering is the schema's protection working, not an obstacle routed around.
+
+**Logs carry counts only** (D12). "Which member was erased" is precisely the fact erasure
+exists to destroy, so writing it to a log would undo the work in the same breath.
+
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(filled at push)* |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | *(summary)* |
+
+**The API side of feature 002 is complete after this phase.** Phases 7–9 are `fitforge-web`.
 
 ---
 
