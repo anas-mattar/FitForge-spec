@@ -33,7 +33,7 @@ a defect in this file — fix it in your first feature branch.
 
 | | Version | Why that one |
 |---|---|---|
-| .NET SDK | **10.0.202** | Pinned in `fitforge-api/global.json`. A different feature band fails the build rather than silently using another compiler. |
+| .NET SDK | **10.0.202** | Pinned in **fitforge-api/global.json**. A different feature band fails the build rather than silently using another compiler. |
 | Node.js | **22 LTS** (20.9+ works) | Next.js 16 with Turbopack. |
 | SQL Server | any reachable instance, or none | Optional for the shell — see "Running without a database" below. |
 
@@ -100,7 +100,7 @@ FITFORGE_API_BASE_URL=http://localhost:5212
 ```
 
 Never prefix it `NEXT_PUBLIC_`. The browser is not allowed to know the API's address — the
-BFF holds it, and `fitforge-web/src/lib/api-client.ts` is marked `server-only`, so importing
+BFF holds it, and **fitforge-web/src/lib/api-client.ts** is marked `server-only`, so importing
 it from a client component fails the build rather than leaking the address into a bundle.
 
 ```bash
@@ -176,6 +176,12 @@ in your hands.
 
 The digests in `docs/digests/` are an orientation aid, not law. They never satisfy a
 "read first" obligation.
+
+One authoring rule for this file and every other governance document: a path in backticks
+must resolve from the governance root, because `doc-lint` checks that it does. Paths inside
+`fitforge-api` and `fitforge-web` do **not** resolve in CI — governance CI checks out this
+repository alone — so write those in bold, not backticks. It passes locally either way,
+which is exactly why it is worth knowing before it fails on a push.
 
 ## 4. Claiming a feature
 
