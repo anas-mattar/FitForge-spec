@@ -155,22 +155,29 @@ two mechanisms that make D2 reversible and FR-004 true that standard is not opti
 
 ### Implementation
 
-- [ ] T021 Add `src/FitForge.Domain/Members/Session.cs` and `SignInAttempt.cs` per `data-model.md`, including the three approved deviations from `database-rules.md` (D3) — each one commented with the plan decision that approved it, so the next reader finds the reason and not just the absence.
-- [ ] T022 Add `SessionConfiguration.cs` and `SignInAttemptConfiguration.cs` — `UQ_Session_TokenHash`, `IX_Session_MemberId`, `IX_SignInAttempt_Email_At`, restrict FKs.
-- [ ] T023 Generate migration `AddSessionAndSignInAttempt`. One migration per phase (`database-rules.md`).
-- [ ] T024 Add `src/FitForge.Api/Features/Identity/SessionService.cs` — issue (256 random bits from `RandomNumberGenerator`, store `SHA-256` only), resolve by hash, revoke one, revoke all-but-one, revoke all. The token is returned to the caller exactly once and never read back from storage (D3).
-- [ ] T025 Add `src/FitForge.Api/Hosting/Authentication/BearerSessionHandler.cs` — turns `Authorization: Bearer <token>` into the current member, or 401. Expired, revoked, unknown and "belongs to a soft-deleted member" all produce the same 401 (`contracts/auth.md` §5).
-- [ ] T026 Add `CurrentMember` as the only way a handler learns who is asking. There is no other accessor, so D7 has one place to be right.
-- [ ] T027 Implement sliding expiry — extend to now + 14 days on resolve, at most once per hour, so the hot path is not a write per request.
-- [ ] T028 Map `GET /api/v1/auth/session` per `contracts/auth.md` §5.
+- [x] T021 Add `src/FitForge.Domain/Members/Session.cs` and `SignInAttempt.cs` per `data-model.md`, including the three approved deviations from `database-rules.md` (D3) — each one commented with the plan decision that approved it, so the next reader finds the reason and not just the absence.
+- [x] T022 Add `SessionConfiguration.cs` and `SignInAttemptConfiguration.cs` — `UQ_Session_TokenHash`, `IX_Session_MemberId`, `IX_SignInAttempt_Email_At`, restrict FKs.
+- [x] T023 Generate migration `AddSessionAndSignInAttempt`. One migration per phase (`database-rules.md`).
+- [x] T024 Add `src/FitForge.Api/Features/Identity/SessionService.cs` — issue (256 random bits from `RandomNumberGenerator`, store `SHA-256` only), resolve by hash, revoke one, revoke all-but-one, revoke all. The token is returned to the caller exactly once and never read back from storage (D3).
+- [x] T025 Add `src/FitForge.Api/Hosting/Authentication/BearerSessionHandler.cs` — turns `Authorization: Bearer <token>` into the current member, or 401. Expired, revoked, unknown and "belongs to a soft-deleted member" all produce the same 401 (`contracts/auth.md` §5).
+- [x] T026 Add `CurrentMember` as the only way a handler learns who is asking. There is no other accessor, so D7 has one place to be right.
+- [x] T027 Implement sliding expiry — extend to now + 14 days on resolve, at most once per hour, so the hot path is not a write per request.
+- [x] T028 Map `GET /api/v1/auth/session` per `contracts/auth.md` §5.
 
 ### Tests
 
-- [ ] T029 [P] `FitForge.Api.Tests` — resolve succeeds for a live session; fails for expired, for revoked, for unknown, and for a session whose member is soft-deleted. Four cases, one message.
-- [ ] T030 `FitForge.Api.Tests` — the stored `TokenHash` is not the token, and no column anywhere holds the token (D3). Asserted against the database, not against the code.
-- [ ] T031 `FitForge.Api.Tests` — sliding expiry extends at most once per hour.
+- [ ] T029 [P] `FitForge.Api.Tests` — resolve succeeds for a live session; fails for expired, for revoked, for unknown, and for a session whose member is soft-deleted. Four cases, one message. **BLOCKED — see A4.**
+- [ ] T030 `FitForge.Api.Tests` — the stored `TokenHash` is not the token, and no column anywhere holds the token (D3). Asserted against the database, not against the code. **BLOCKED — see A4.**
+- [ ] T031 `FitForge.Api.Tests` — sliding expiry extends at most once per hour. **BLOCKED — see A4.**
+- [x] T031b Partial coverage that needs no database: every shape of missing or malformed credential is refused identically, and an unauthenticated request never reaches persistence. Named as partial in the file rather than left to look like coverage it is not.
 
-**Gate (human-run)**: as phase 1.
+**Phase 3 is INCOMPLETE.** The implementation is done and committed; three of its four tests
+cannot be written until A4 is decided. The phase does not take its gate until they exist —
+session resolution is the mechanism invariant 2 rests on, and shipping it on a
+credential-shape test would be the "looks like a gate but isn't" failure this project keeps
+finding in other people's work.
+
+**Gate (human-run)**: deferred until T029–T031 exist.
 
 ---
 
@@ -446,3 +453,37 @@ copy. The build is clean without it.
 **This is the first time a machine check, rather than a reviewer, caught a scope error in
 FitForge** — and it was in a nested code repository, which is precisely the blindness kit
 feature 012 (GAP-016) closed. The check was worth building.
+
+### A4 — how the database-touching tests get a database (blocks T029, T030, T031)
+
+**The problem.** Three of phase 3's tests assert against stored rows: that a live session
+resolves and an expired, revoked or soft-deleted-member one does not; that the token is
+nowhere in the database; that the expiry slides at most hourly. All three need a database.
+There is none — the SQL Server instance is unreachable from the authoring host, and
+`fitforge-api`'s CI is `ubuntu-latest` with no service container. This is the same wall
+A1 hit, but A1's workaround (read the migration's operations) has no analogue here: these
+tests are *about* what persistence does.
+
+**What is actually available**, checked rather than assumed: Docker 28.2.2 is running on
+this host, and SQL Server LocalDB (`MSSQLLocalDB`) is installed.
+
+| | Approach | Fidelity | Cost |
+|---|---|---|---|
+| **a** | **Real SQL Server.** LocalDB or a Docker container locally; an `mssql/server` service container in CI | The engine that ships. Real unique indexes, real FKs, real check constraints, and the migration is genuinely applied | **No package.** CI gains a service container (~30–60s). A local gate run needs Docker or LocalDB up. `.github/workflows/project-gate.yml` must change — **outside phase 3's Territory** |
+| b | SQLite in-memory (`Microsoft.EntityFrameworkCore.Sqlite`, test-only) | Relational, so unique indexes and FKs are enforced — but a different engine. `binary(32)` becomes a BLOB, `datetime2(3)` differs, and SQL Server migrations cannot be applied, so the schema under test is **built from the model, not from the migration that ships** | One new package |
+| c | `Microsoft.EntityFrameworkCore.InMemory` | No constraints at all | One new package |
+
+**Recommended: (a), and it is not close.** The one thing that makes this feature Critical is
+that member isolation must actually hold, and invariant 2 calls a cross-member read "a defect
+of the highest severity". Both (b) and (c) test that against something other than the
+database that will run it — and (c) would let SC-002's test pass with the unique index
+missing, which is worse than having no test, because it reads as evidence. (a) also
+retroactively strengthens T011: A1's stated residual was "a migration that is valid C# but
+fails against SQL Server", and under (a) that stops being a residual.
+
+**What (a) needs from you, beyond approval of the approach**: phase 3's Territory does not
+include `.github/**`, and the CI change lives there. Either widen it in a governance commit
+made **before** the CI commit, or give the CI wiring its own phase. I would rather you chose
+than have me pick the one that happens to be less work.
+
+**Amendment approved by**: *(pending — anas.m)*
