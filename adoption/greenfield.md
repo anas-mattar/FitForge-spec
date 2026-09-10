@@ -83,6 +83,13 @@ the first commit:
   nested repo. Run `git status` and `git rev-parse --show-toplevel` right after scaffolding and
   confirm new files appear as untracked additions at the expected parent-repo root, not inside
   a stray nested `.git`.
+- **Scaffolder writes its own agent files**: some scaffolding CLIs (e.g. `create-next-app`)
+  now generate `CLAUDE.md` / `AGENTS.md` inside the code repository, and some regenerate a
+  marked block in them on every dev-server run. In the nested layout that puts a second,
+  tool-authored agent file between the agent and the governance tree above it. Rewrite both
+  to point at the parent repository's law, and keep your content OUTSIDE any regenerated
+  marker block so it survives — deleting the block only re-creates it as an uncommitted
+  change.
 - **Strict-build flag fails on a transitive vulnerability**: if proving the gate trips a
   strict-build flag on a dependency the scaffold pulled in transitively, triage per
   `docs/sdlc/gate-command.md` ("Strict-build flags vs transitive-dependency
