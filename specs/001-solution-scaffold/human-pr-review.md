@@ -126,17 +126,21 @@ owner's recorded approval on the evidence triplet.
 | 5 | governance | [34433740428](https://github.com/anas-mattar/FitForge-spec/actions/runs/34433740428) | success | `ae7c38d` | recorded 2026-09-10 |
 | 6 | api | [34432663594](https://github.com/anas-mattar/fitforge-api/actions/runs/34432663594) | success | `cded3bda60869c1057d8f03be4f30b0a8370de34` | recorded 2026-09-10 |
 | 7 | api | [34436554259](https://github.com/anas-mattar/fitforge-api/actions/runs/34436554259) | success | `798ca647bf168d0d9023cdee134ab7dc25f0655d` | **NOT YET RECORDED** |
-| 8 | api | [34436554259](https://github.com/anas-mattar/fitforge-api/actions/runs/34436554259) | success | `7d3e257` — see note | **NOT YET RECORDED** |
+| 8 | api | [34444566042](https://github.com/anas-mattar/fitforge-api/actions/runs/34444566042) | success | `7d3e257e795a3f050ad5df0c4a97c88e23600132` | **NOT YET RECORDED** |
 | 9 | web | [34437476386](https://github.com/anas-mattar/fitforge-web/actions/runs/34437476386) | success | `dee58e92ce28314c5dff1e1cddc8929b56ed11ed` | **NOT YET RECORDED** |
 
-**Note on phase 8's evidence.** `7d3e257` has no CI run of its own: phases 8 and 7 were
-pushed together, so only the branch head `798ca64` was graded. Under
-`docs/sdlc/gate-command.md` that is the batch-end commit and is legitimate evidence — for
-a **declared** batch. This batch was not declared; `plan.md` §1 says `Gate Batching: none`.
-The runs are genuinely green and genuinely cover phase 8's code, but the paperwork says
-one thing and the push did another, and that is the same shape of gap the governance
-review's F2 found in phase 5's row. Certify it as a batch or re-push phase 8 alone; do not
-let the row imply a run that does not exist.
+**Note on phase 8's evidence — resolved 2026-09-10.** `7d3e257` originally had no CI run
+of its own: phases 8 and 7 were pushed together, so only the head `798ca64` was graded.
+That is a legitimate batch-end commit under `docs/sdlc/gate-command.md` — for a
+**declared** batch, and `plan.md` §1 says `Gate Batching: none`. Rather than certify
+against a sha with no run, or retroactively declare a batch (which is the retroactivity
+the rules exist to stop), `7d3e257` was pushed alone on a throwaway `chore/` branch, CI
+ran against exactly that commit, and the branch was deleted. The row above now cites a run
+whose `headSha` is phase 8's own commit.
+
+The lesson, for the next feature: **push each phase commit separately.** Two commits in
+one push means one of them has no evidence of its own, and the discrepancy surfaces at
+certification time when it is most awkward to fix.
 
 Corrected 2026-09-10 after the governance review (F2). This table previously named
 `2759908` as phase 5's certifying commit; no CI run exists for it, because it was never a
