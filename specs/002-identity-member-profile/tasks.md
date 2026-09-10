@@ -365,7 +365,7 @@ exists to destroy, so writing it to a log would undo the work in the same breath
 | | |
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `2233d8e` |
 | `scope-check-repos` | `PASS phase 6 commit 2233d8e (5 file(s))` |
 | `git diff --stat` | 5 files changed, 468 insertions(+) |
