@@ -85,10 +85,12 @@ into one: saying otherwise would make this table a claim instead of a record.
 | | |
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `7922e31` |
-| `scope-check-repos` | *(verdict)* |
+| `scope-check-repos` | `PASS phase 1 commit 7922e31 (1 file)` |
 | `git diff --stat` | 1 file changed, 143 insertions(+) |
+
+**Phase 1 is done**: T001–T012 complete, both gate runs exit 0, both scope checks PASS.
 
 T011's six assertions were **mutation-checked**, not assumed: flipping the expected
 `OnDelete` to `Cascade` and the expected drop order to Member-first fails two of the six.
