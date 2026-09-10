@@ -234,7 +234,7 @@ the decoy hash's 210,000 iterations would be protecting a door with a window nex
 | | |
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `479d43f` |
 | `scope-check-repos` | `PASS phase 4 commit 479d43f (9 file(s))` |
 | `git diff --stat` | 9 files changed, 937 insertions(+), 5 deletions(-) |
