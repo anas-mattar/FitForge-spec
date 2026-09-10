@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-identity-member-profile`
 **Created**: 2026-09-10
-**Status**: Draft — awaiting owner approval
+**Status**: Approved 2026-09-10 (owner: anas.m)
 **Delivery Level**: Critical
 **Input**: User description: "Registration, sign in, BFF-held session, and the member profile preferences"
 
