@@ -490,7 +490,7 @@ owed at review.
 
 | | |
 |---|---|
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `ea76672` |
 | `scope-check-repos` | `PASS phase 7 commit ea76672 (21 file(s))` |
 | `git diff --stat` | 20 files changed, 957 insertions(+), 18 deletions(-) |
