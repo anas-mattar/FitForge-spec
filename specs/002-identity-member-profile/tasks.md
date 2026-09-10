@@ -304,9 +304,9 @@ assumed away. A reviewer reading only T054 would over-trust it.
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
 | **Exit code** | *(pending — human-run)* |
-| Commit gated | *(filled at push)* |
-| `scope-check-repos` | *(verdict)* |
-| `git diff --stat` | *(summary)* |
+| Commit gated | `43e30e6` |
+| `scope-check-repos` | `PASS phase 5 commit 43e30e6 (4 file(s))` |
+| `git diff --stat` | 4 files changed, 992 insertions(+) |
 
 ---
 
