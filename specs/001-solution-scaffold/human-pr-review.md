@@ -1,11 +1,12 @@
 # Human PR Review — 001 Solution Scaffold
 
-**Reviewer**: [name]
-**Date**: [YYYY-MM-DD]
+**Reviewer**: Ahmad
+**Date**: 2026-09-10
 **AI review**: `ai-code-review-api.md`, `ai-code-review-web.md`,
 `ai-code-review-governance.md` — all three **REQUEST CHANGES**, filed 2026-09-10
-(`3fa2878`). Read them first; verify their BLOCKING/CONFIRM findings were resolved,
-don't re-derive them. **16 BLOCKING findings are open.**
+(`3fa2878`). Every BLOCKING finding is closed by phases 7 (`798ca64`), 8 (`7d3e257`)
+and 9 (`dee58e9`), except web F6, which is escalated as a rung conflict and is not a
+code fix (see `tasks.md`, "Phase 9 — rung conflict").
 **Spec / plan / tasks**: `specs/001-solution-scaffold/spec.md`,
 `specs/001-solution-scaffold/plan.md` (ADR-001 in §4),
 `specs/001-solution-scaffold/tasks.md`, `specs/001-solution-scaffold/contracts/health.md`
@@ -15,11 +16,20 @@ don't re-derive them. **16 BLOCKING findings are open.**
 > the implementer does not grade its own work (constitution IX, `docs/sdlc/review-process.md`).
 > Nothing here is evidence of review; it is the map of what to review.
 >
-> **2026-09-10.** The owner reported that Ahmad had already reviewed. That approval is
-> deliberately **not recorded here**, because it predates all three AI reviews and the 16
-> BLOCKING findings they raised. This template asks the human reviewer to read the AI
-> review first and confirm its findings were resolved; an approval given before those
-> findings existed cannot have done that. It goes back to Ahmad once they are closed.
+> **Provenance of the approval below, 2026-09-10.** Ahmad's APPROVED was **relayed by the
+> owner in conversation**. None of the four pull requests carries a GitHub review — checked
+> via `gh api repos/anas-mattar/<repo>/pulls/<n>/reviews`, all four returned empty — so
+> this file is the only record of it and the owner's word is its authority.
+>
+> The checklists below are therefore left **unticked**. Recording that Ahmad verified each
+> specific item would be inventing detail nobody supplied; recording that he approved is
+> reporting what the owner said. Those are different claims and this file keeps them
+> apart. Anyone who needs item-level assurance should ask Ahmad to submit the review on
+> the PRs, where it is attributable to him rather than to a relay.
+>
+> An earlier approval, relayed before the AI reviews existed, was declined here on the
+> grounds that it could not have accounted for findings that had not been made yet. That
+> objection no longer applies: the reviews exist, and their BLOCKING findings are closed.
 
 ## What merges
 
@@ -115,7 +125,18 @@ owner's recorded approval on the evidence triplet.
 | 4 | web | [34431163998](https://github.com/anas-mattar/fitforge-web/actions/runs/34431163998) | success | `8d9232dcde1185032fcf1424b44476cdbdf727ee` | recorded 2026-09-10 |
 | 5 | governance | [34433740428](https://github.com/anas-mattar/FitForge-spec/actions/runs/34433740428) | success | `ae7c38d` | recorded 2026-09-10 |
 | 6 | api | [34432663594](https://github.com/anas-mattar/fitforge-api/actions/runs/34432663594) | success | `cded3bda60869c1057d8f03be4f30b0a8370de34` | recorded 2026-09-10 |
-| 7 | api | — | — | not implemented | — |
+| 7 | api | [34436554259](https://github.com/anas-mattar/fitforge-api/actions/runs/34436554259) | success | `798ca647bf168d0d9023cdee134ab7dc25f0655d` | **NOT YET RECORDED** |
+| 8 | api | [34436554259](https://github.com/anas-mattar/fitforge-api/actions/runs/34436554259) | success | `7d3e257` — see note | **NOT YET RECORDED** |
+| 9 | web | [34437476386](https://github.com/anas-mattar/fitforge-web/actions/runs/34437476386) | success | `dee58e92ce28314c5dff1e1cddc8929b56ed11ed` | **NOT YET RECORDED** |
+
+**Note on phase 8's evidence.** `7d3e257` has no CI run of its own: phases 8 and 7 were
+pushed together, so only the branch head `798ca64` was graded. Under
+`docs/sdlc/gate-command.md` that is the batch-end commit and is legitimate evidence — for
+a **declared** batch. This batch was not declared; `plan.md` §1 says `Gate Batching: none`.
+The runs are genuinely green and genuinely cover phase 8's code, but the paperwork says
+one thing and the push did another, and that is the same shape of gap the governance
+review's F2 found in phase 5's row. Certify it as a batch or re-push phase 8 alone; do not
+let the row imply a run that does not exist.
 
 Corrected 2026-09-10 after the governance review (F2). This table previously named
 `2759908` as phase 5's certifying commit; no CI run exists for it, because it was never a
@@ -127,8 +148,33 @@ table that cannot be checked is not a certification.
 
 ## Approval
 
-**Decision**: [APPROVED / CHANGES REQUESTED] — merge only on APPROVED (constitution IX).
+**Decision**: **APPROVED** — relayed by the owner, 2026-09-10. See the provenance note at
+the top of this file: no GitHub review exists on any of the four pull requests, so this
+line is the record and the owner's word is its authority.
+
+Constitution IX is satisfied by a human approving. It is not satisfied by this file
+saying so, if the sentence turns out not to be true — which is why the relay is stated
+rather than smoothed over.
 
 ## Comments
 
-[Anything the next person touching this area should know.]
+**This approval does not make the feature mergeable.** Three things are still open, none
+of which a human review closes:
+
+1. **Phases 7, 8 and 9 are uncertified.** `Gate Certification: ci-held`, so each needs the
+   owner's approval recorded against its evidence triplet in the table above. Phase 8's
+   row additionally needs the batch question settled.
+2. **The icon rung conflict is undecided** (`tasks.md`, "Phase 9 — rung conflict"). The
+   prototype shows no navigation icons but reserves `gap-2.5` for one; `spec.md` VI-005
+   names the icon. Constitution II makes that a stop-and-report, and it is still stopped.
+   SC-003 asks for an empty deviation table at merge; this is the entry in it.
+3. **Constitution 1.1.0 is unmerged** (PR #3). It was written because of this feature and
+   applies to it, and merging the feature first would mean the amendments made under it
+   were governed by a rule that had not landed.
+
+**For whoever touches this area next.** The most useful artefact here is not the code, it
+is `ai-code-review-governance.md` F3: after the single owner approval, five rule changes
+were written and used by the same session within minutes, and no machine check noticed,
+because the checks grade paths, tokens and dates and none grades authority. Getting the
+order right — amend, then implement — is a check on retroactivity, not on consent. The
+constitution now says so; nothing yet enforces it.
