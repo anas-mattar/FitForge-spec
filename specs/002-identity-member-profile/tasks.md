@@ -126,7 +126,7 @@ about SC-002 — the same standard applies to the tests that reach it.
 | | |
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
 | Commit gated | `4b56aa7` |
 | `scope-check-repos` | `PASS phase 2 commit 4b56aa7 (6 file(s))` |
 | `git diff --stat` | 6 files changed, 628 insertions(+) |
