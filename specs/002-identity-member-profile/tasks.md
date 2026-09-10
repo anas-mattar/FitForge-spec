@@ -386,25 +386,114 @@ exists to destroy, so writing it to a log would undo the work in the same breath
 
 ### Implementation
 
-- [ ] T069 Generate the shadcn/ui primitives this feature needs — `input`, `label`, `select`, `card` — into `src/components/ui/`. Generated source, not a runtime dependency (plan §5).
-- [ ] T070 Add `src/lib/session.ts` — read, write and clear `__Host-fitforge_session` with `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, no `Domain` (D4). `import "server-only"`.
-- [ ] T071 Add the shared `Origin`-check helper and apply it to every mutating BFF route (D4). Three lines, one place.
-- [ ] T072 [P] Add `src/app/api/bff/auth/sign-in/route.ts`, `register/route.ts`, `sign-out/route.ts` per `contracts/member.md` §6 — map, set or clear the cookie, and nothing else. **No generic pass-through route** (D11).
-- [ ] T073 Map upstream unavailability to a service failure, never a credential failure (FR-017, `contracts/auth.md` §7). A member told their password is wrong when the server is down will change a password that was fine.
-- [ ] T074 Build the sign-in screen at `src/app/(auth)/sign-in/page.tsx` to VI-001 through VI-016 — two-column grid at ≥1024px, left panel not rendered below it (VI-001), segmented control with Sign in selected (VI-007), field order email then password (VI-008), error above the button (VI-012), full-width 40px submit (VI-013).
-- [ ] T075 Render the three declared deviations exactly as `spec.md` declares them: no "Forgot?" link (so VI-010's row is the label alone), and the register half of the segmented control switches the same card rather than routing away.
-- [ ] T076 **Remove `FITFORGE_SESSION_SECRET` from `.env.example`** (D4). This design gives it no purpose, and a named secret nobody uses invites someone to make it load-bearing later without a decision.
+- [x] T069 Generate the shadcn/ui primitives this feature needs — `input`, `label`, `select`, `card` — into `src/components/ui/`. Generated source, not a runtime dependency (plan §5).
+- [x] T070 Add `src/lib/session.ts` — read, write and clear `__Host-fitforge_session` with `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, no `Domain` (D4). `import "server-only"`.
+- [x] T071 Add the shared `Origin`-check helper and apply it to every mutating BFF route (D4). Three lines, one place.
+- [x] T072 [P] Add `src/app/api/bff/auth/sign-in/route.ts`, `register/route.ts`, `sign-out/route.ts` per `contracts/member.md` §6 — map, set or clear the cookie, and nothing else. **No generic pass-through route** (D11).
+- [x] T073 Map upstream unavailability to a service failure, never a credential failure (FR-017, `contracts/auth.md` §7). A member told their password is wrong when the server is down will change a password that was fine.
+- [x] T074 Build the sign-in screen at `src/app/(auth)/sign-in/page.tsx` to VI-001 through VI-016 — two-column grid at ≥1024px, left panel not rendered below it (VI-001), segmented control with Sign in selected (VI-007), field order email then password (VI-008), error above the button (VI-012), full-width 40px submit (VI-013).
+- [x] T075 Render the three declared deviations exactly as `spec.md` declares them: no "Forgot?" link (so VI-010's row is the label alone), and the register half of the segmented control switches the same card rather than routing away.
+- [x] T076 **Remove `FITFORGE_SESSION_SECRET` from `.env.example`** (D4). This design gives it no purpose, and a named secret nobody uses invites someone to make it load-bearing later without a decision.
 
 ### Tests and the loop
 
-- [ ] T077 [P] Vitest — the BFF sign-in route maps 401 to a credential error and an unreachable API to a service error. Every row of the mapping table, as 001 did for health.
-- [ ] T078 Vitest — the cookie is set with all five attributes, and its value is not readable from a non-`HttpOnly` path.
-- [ ] T079 **Visual Compliance Loop** (`docs/sdlc/review-process.md`) against `screenshots/01-signin-desktop-{light,dark}.jpg`, in both themes, until the deviation table is empty or holds only the three `spec.md` declares.
-- [ ] T080 Verify the responsive rules live at <1024px (VI-001, VI-017). No capture exists below 1024px — `spec.md` says so — so these are checked in a resized browser, not against an image.
-- [ ] T081 **SC-003 by inspection**: after sign-in, `localStorage`, `sessionStorage` and every script-readable cookie hold nothing that authenticates, and the browser issues no request to the API origin. Recorded in this file with what was inspected.
+- [x] T077 [P] Vitest — the BFF sign-in route maps 401 to a credential error and an unreachable API to a service error. Every row of the mapping table, as 001 did for health.
+- [x] T078 Vitest — the cookie is set with all five attributes, and its value is not readable from a non-`HttpOnly` path.
+- [x] T079 **Visual Compliance Loop** (`docs/sdlc/review-process.md`) against `screenshots/01-signin-desktop-{light,dark}.jpg`, in both themes, until the deviation table is empty or holds only the three `spec.md` declares.
+- [x] T080 Verify the responsive rules live at <1024px (VI-001, VI-017). No capture exists below 1024px — `spec.md` says so — so these are checked in a resized browser, not against an image.
+- [x] T081 **SC-003 by inspection**: after sign-in, `localStorage`, `sessionStorage` and every script-readable cookie hold nothing that authenticates, and the browser issues no request to the API origin. Recorded in this file with what was inspected.
+
+### Visual Compliance Loop — result
+
+Run against `screenshots/01-signin-desktop-{light,dark}.jpg` and the prototype, measuring
+the rendered page rather than eyeballing it. Every VI item measured, in both themes and
+at five widths.
+
+| VI | Required | Measured |
+|---|---|---|
+| VI-001 | grid `1fr 380px`, gap 24px at ≥1024px | `844px 380px`, gap 24px |
+| VI-002 | panel padding 40px, rounded, distributed top/middle/bottom | 40px, radius 10.4px, `space-between` |
+| VI-003 | mark 28×28 stroked in primary; wordmark 20px semibold; gap 8px | 28×28, `rgb(245,96,10)` = `--primary`; 20px/600; 8px |
+| VI-004 | headline 24px semibold snug, max 24rem; body 14px muted, 12px below | 24px/600, line-height 33px, max-width 384px; 14px `rgb(113,113,122)`, 12px |
+| VI-005 | 12px muted | 12px muted |
+| VI-006 | card rounded, 1px border, padding 24px | radius 10.4px, padding 24px, border 1px |
+| VI-007 | segmented on `--muted`, 4px inset, two equal buttons, Sign in selected | `rgb(244,244,245)`, 4px, `159.333px 159.333px`, Sign in default |
+| VI-008 | Email then Password, labels 14px medium | order confirmed, 14px/500 |
+| VI-009 / VI-011 | inputs 40px, 12px padding, 14px text | both 40px, 12px, 14px |
+| VI-012 | error under password, above the button, 12px destructive, hidden when none | hidden with no error; renders in that position with one |
+| VI-013 | submit full width, 40px | 331px (the card's inner width), 40px |
+| VI-014 | footer 16px below, centred, 12px muted | 16px, centre, 12px |
+| VI-015 | no app shell | no `<header>`, no `<nav>` — structural, see below |
+| VI-016 | themes differ only in token values | geometry byte-identical across both; colours differ |
+
+**Deviation found and fixed — the loop earning its keep.** VI-001 says that below 1024px
+it is *"the card alone, centered"*. The first version was centred and **wrong**: the
+single-column grid stretched the card to the full viewport — 868px at 900px wide, 991px
+at 1023px. Centred, yes; a sign-in card, no. Capped at 380px below `lg`, then re-measured:
+
+| Width | Panel | Card | Centred | Sideways scroll |
+|---|---|---|---|---|
+| 1280 | rendered | 380px | n/a (two columns) | no |
+| 1023 | **not rendered** | 380px | yes | no |
+| 900 | not rendered | 380px | yes | no |
+| 768 | not rendered | 380px | yes | no |
+| 390 | not rendered | 358px (page padding) | yes | no |
+
+**T080's method, recorded because it is not the obvious one.** The window would not
+resize below 1280px — the same limit `spec.md` records for the captures. Media queries
+were therefore evaluated in **iframes** of the target width, which get their own viewport
+for that purpose. Measured, not inferred from the class names.
+
+**VI-015 is structural, not conditional.** The app shell moved out of the root layout
+into `src/app/(app)/layout.tsx`, and sign-in lives in `(auth)`. A conditional inside the
+shell is one `if` away from leaking navigation onto a screen a visitor with no account
+should never see; a route group cannot do that, and every screen added to the group
+inherits the right answer.
+
+**Declared deviations, rendered as declared** (`spec.md`): no "Forgot?" link — so VI-010's
+row holds the label alone — and Register switches the card in place rather than routing
+away.
+
+One measurement worth not over-reading: computed border width reads `0.666667px` rather
+than `1px`. That is the display's device-pixel ratio of 1.5 snapping a 1px border to one
+device pixel, not a CSS deviation — the declared value is `1px`.
+
+### SC-003 — verified by inspection, both halves
+
+Against a real signed-in session: the API running on LocalDB, an account registered, and
+sign-in performed through `/api/bff/auth/sign-in`, the exact call `SignInCard.submit()`
+makes.
+
+| Checked | Result |
+|---|---|
+| `localStorage` | empty |
+| `sessionStorage` | empty |
+| `document.cookie` | empty — **zero** script-readable cookies |
+| IndexedDB | no databases |
+| any occurrence of a token, the password, or "bearer" in script-reachable storage | none |
+| requests the browser made | `/api/bff/auth/sign-in` only — **no request to the API origin** (`127.0.0.1:5099`) |
+
+**The half that is easy to fake, and how it was actually settled.** An empty
+`document.cookie` proves nothing on its own — it reads the same whether the cookie is
+HttpOnly or was never set. So: `POST /api/bff/auth/sign-out` was called, and the database
+then showed **one session revoked** out of three. The BFF can only have revoked it by
+sending a token it read from a cookie the script could not see. Both halves of SC-003 hold.
+
+*Caveat, stated rather than glossed:* the sign-in was driven by `fetch` from the page, not
+by typing into the form — synthetic keystrokes would not reach the focused field in this
+environment. The call is identical in path, headers and body to the component's, and the
+component's own mapping is covered by T077, but a human running the form by hand is still
+owed at review.
 
 **Gate (human-run)**: `npm run lint && npm run build && npm run typecheck && npm test` in
 `fitforge-web`.
+
+| | |
+|---|---|
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(filled at push)* |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | *(summary)* |
 
 ---
 
