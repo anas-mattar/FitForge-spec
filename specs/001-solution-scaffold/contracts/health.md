@@ -52,6 +52,11 @@ every "the API is degraded" into "the API is unreachable" — the exact collapse
 forbids. Each dependency check therefore carries its own timeout, and the check reports
 `failed` on its own terms rather than letting the caller give up first.
 
+The three seconds bound the **whole document**, so a single check's timeout must be
+strictly shorter than it — a check bounded at exactly three seconds cannot fit inside a
+three-second document and leaves nothing for the checks beside it. The database check is
+bounded at two.
+
 Found the hard way: `AddDbContextCheck` against an unreachable SQL Server takes ~15
 seconds on a cold attempt and ~40ms once SqlClient has a cached failure, so the symptom
 also flaps — the first probe after a quiet period says `unreachable`, the next says

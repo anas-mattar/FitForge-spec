@@ -178,7 +178,7 @@ stopped 36ms (`unreachable`).
 
 ### Implementation
 
-- [ ] T047 Give the database health-check registration a timeout of 3 seconds via `HealthCheckRegistration.Timeout`, so the check fails on its own terms rather than letting the caller give up first. The connection string's `Connect Timeout` is **not** sufficient — it was tried at 2 seconds and the check still took 14.7 seconds.
+- [ ] T047 Give the database health-check registration a timeout via `HealthCheckRegistration.Timeout`, so the check fails on its own terms rather than letting the caller give up first. The connection string's `Connect Timeout` is **not** sufficient — it was tried at 2 seconds and the check still took 14.7 seconds. **Amended 2026-09-10, before implementation**: the value is **2 seconds**, not the 3 this task first said. 3 was wrong by construction — the contract's 3 seconds bounds the whole readiness *document*, so a 3-second check leaves zero headroom for everything around it. Measured at 3 seconds the document answered in 3.03s warm, over the bound it was meant to satisfy. At 2 seconds it answers in 2.04s warm and 2.83s cold (Release), inside the bound with room to spare.
 - [ ] T048 Assert the bound in `DependencyInjection`, not only in configuration, so it cannot be widened past the contract's consumer timeout by an appsettings edit.
 
 ### Tests
