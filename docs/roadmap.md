@@ -41,7 +41,7 @@ Status flow: `idea → specified → in progress → shipped → dropped`
 
 | Feature | Covers (Inv #) | Priority | Status | Owner | Spec |
 |---|---|---|---|---|---|
-| Solution scaffold (both repositories, architecture ADR in `plan.md`, proven gates) | — | P1 | in progress | anas.m | `specs/001-solution-scaffold/` |
+| Solution scaffold (both repositories, architecture ADR in `plan.md`, proven gates) | — | P1 | in progress | anas.m | `[specs/001-solution-scaffold/]` |
 | Identity and member profile (register, sign in, session held by the BFF) | INV-001, INV-011 | P1 | idea | anas.m | — |
 | Exercise library, read-only (seeded catalog, list, filter, detail) | INV-003, INV-004 | P1 | idea | ahmad | — |
 | Program read (assigned program, day detail, today's planned workout) | INV-002, INV-005, INV-006 | P1 | idea | anas.m | — |
