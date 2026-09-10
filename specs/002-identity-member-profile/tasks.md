@@ -46,7 +46,7 @@ Plan decisions are cited as `D1`…`D13`; visual items as `VI-nnn`; requirements
 ### Tests
 
 - [x] T010 [P] `FitForge.Domain.Tests` — email normalization: mixed case, leading and trailing whitespace, and the two forms colliding.
-- [ ] T011 `FitForge.Api.Tests` — the migration's `UpOperations` create exactly `Member` and `Profile`, and its `DownOperations` drop exactly those two, child first (`rollback.md` asserts the down-path is safe; the assertion should be executed, not believed). **Amendment approved by**: anas.m, 2026-09-10 — was "applies to an empty database"; no database is reachable from the authoring host or from CI, and the operations settle the same question without one (A1).
+- [x] T011 `FitForge.Api.Tests` — the migration's `UpOperations` create exactly `Member` and `Profile`, and its `DownOperations` drop exactly those two, child first (`rollback.md` asserts the down-path is safe; the assertion should be executed, not believed). **Amendment approved by**: anas.m, 2026-09-10 — was "applies to an empty database"; no database is reachable from the authoring host or from CI, and the operations settle the same question without one (A1).
 - [x] T012 `FitForge.Domain.Tests` — the ADR guard still passes: `FitForge.Domain.csproj` declares no `PackageReference` and no `ProjectReference`. It exists from 001; this phase is the first real chance to break it.
 
 **T008 — the dedicated-database confirmation, recorded.** The configured target is
@@ -76,10 +76,24 @@ was reverted rather than licensed by a widened Territory — see A3 below. `3279
 re-commit. A Critical feature's audit trail should show the check working, not only the
 green line it eventually produced.
 
-**T011 lands after this gate**, under amendment A1 (approved below), so phase 1 takes a
-second gate run on the commit that adds it. Recorded rather than folded in: the state that
-was gated and the final state of the phase are not the same commit, and saying otherwise
-would make this table a claim instead of a record.
+**Second gate run — the commit that completes the phase**
+
+T011 landed under amendment A1 *after* the run above, so the state that was gated and the
+final state of the phase are not the same commit. Recorded as two runs rather than folded
+into one: saying otherwise would make this table a claim instead of a record.
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | `7922e31` |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | 1 file changed, 143 insertions(+) |
+
+T011's six assertions were **mutation-checked**, not assumed: flipping the expected
+`OnDelete` to `Cascade` and the expected drop order to Member-first fails two of the six.
+A test that passes both ways is not evidence, and this phase's own `spec.md` says so
+about SC-002 — the same standard applies to the tests that reach it.
 
 ---
 
