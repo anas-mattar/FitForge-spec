@@ -10,7 +10,24 @@
   ],
   "initDate": "2026-09-09",
   "kitVersionAtInit": "0.6.0",
-  "gateProof": [],
+  "gateProof": [
+    {
+      "gate": "backend",
+      "command": "dotnet build --warnaserror && dotnet test",
+      "exitCode": 0,
+      "date": "2026-09-10",
+      "recordedBy": "anas.m",
+      "workingDirectory": "fitforge-api"
+    },
+    {
+      "gate": "frontend",
+      "command": "npm run lint && npm run typecheck && npm run build && npm test",
+      "exitCode": 0,
+      "date": "2026-09-10",
+      "recordedBy": "anas.m",
+      "workingDirectory": "fitforge-web"
+    }
+  ],
   "codeRepos": [
     "fitforge-api",
     "fitforge-web"
