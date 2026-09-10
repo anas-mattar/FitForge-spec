@@ -44,6 +44,19 @@ Answers: can this process serve real requests right now? It checks each declared
 `status` is `ready` or `degraded` at the top level, and `ready` or `failed` per check.
 `checks[].name` is a stable machine identifier, lower-case, never a display string.
 
+**Readiness MUST answer within 3 seconds**, including when a dependency is down.
+
+This is not a performance target, it is what keeps `degraded` reachable. The consumer
+applies a 10-second timeout (§3), so a readiness check that takes longer than that turns
+every "the API is degraded" into "the API is unreachable" — the exact collapse §2
+forbids. Each dependency check therefore carries its own timeout, and the check reports
+`failed` on its own terms rather than letting the caller give up first.
+
+Found the hard way: `AddDbContextCheck` against an unreachable SQL Server takes ~15
+seconds on a cold attempt and ~40ms once SqlClient has a cached failure, so the symptom
+also flaps — the first probe after a quiet period says `unreachable`, the next says
+`degraded`.
+
 Readiness MUST NOT disclose connection strings, server names, credentials, exception
 messages, or stack traces — a readiness probe is reachable by anything that can reach the
 API. A failed check reports the name and the fact of failure, nothing more.

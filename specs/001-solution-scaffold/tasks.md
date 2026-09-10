@@ -156,6 +156,40 @@ repository — the Cross-Repository Feature Rule is what lets
 
 ---
 
+## Phase 6: Bound the readiness check
+
+Added 2026-09-10 after phase 4's end-to-end observation found the defect below. It is
+its own phase rather than a patch inside another one because it changes already-certified
+phase 2 code in a repository no later phase declares.
+
+**Territory**:
+
+- `fitforge-api/src/**`
+- `fitforge-api/tests/**`
+
+**The defect.** `AddDbContextCheck` against an unreachable SQL Server takes ~15 seconds
+on a cold attempt. The contract gives the BFF a 10-second timeout, so the API answers
+503 `degraded` and the BFF — correctly — reports `unreachable`. `degraded` is therefore
+unreachable in practice, and the symptom flaps: once SqlClient has a cached failure the
+same check answers in ~40ms and `degraded` appears again.
+
+Observed values: cold 12.4s at the BFF (`unreachable`), warm 45ms (`degraded`), API
+stopped 36ms (`unreachable`).
+
+### Implementation
+
+- [ ] T047 Give the database health-check registration a timeout of 3 seconds via `HealthCheckRegistration.Timeout`, so the check fails on its own terms rather than letting the caller give up first. The connection string's `Connect Timeout` is **not** sufficient — it was tried at 2 seconds and the check still took 14.7 seconds.
+- [ ] T048 Assert the bound in `DependencyInjection`, not only in configuration, so it cannot be widened past the contract's consumer timeout by an appsettings edit.
+
+### Tests
+
+- [ ] T049 A test that the registered database check carries a timeout, and that the timeout is strictly less than the contract's 10-second consumer timeout. Asserting the relationship rather than the number is the point: whoever changes one is made to think about the other.
+- [ ] T050 A test that a check which exceeds its timeout still produces the contract's 503 `degraded` shape, not a 500 or a hung request.
+
+**Phase exit**: `dotnet build --warnaserror && dotnet test` exits 0, and a manual re-run of phase 4's cold observation reports `degraded` rather than `unreachable`. Commit subject carries `phase 6`.
+
+---
+
 ## Dependencies & Execution Order
 
 - **Phase 1 → Phase 2**: phase 2 adds EF Core to projects phase 1 creates.
