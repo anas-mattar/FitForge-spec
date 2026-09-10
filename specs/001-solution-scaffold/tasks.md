@@ -190,6 +190,53 @@ stopped 36ms (`unreachable`).
 
 ---
 
+## Phase 7: Make the startup message's own advice work
+
+Added 2026-09-10 while writing T042. Its own phase for the same reason as phase 6: it
+changes already-certified code in a repository no other open phase declares.
+
+**Territory**:
+
+- `fitforge-api/src/**`
+
+**The defect.** `DatabaseOptions.MissingConnectionStringMessage` — the message a developer
+sees when the API refuses to start — tells them to run
+`dotnet user-secrets set "Database:ConnectionString" "..."`. That command fails:
+
+```text
+Could not find the global property 'UserSecretsId' in MSBuild project
+'.../src/FitForge.Api/FitForge.Api.csproj'. Ensure this property is set in the project
+or use the '--id' command line option.
+```
+
+The whole point of that message is to cost the reader one message instead of an
+afternoon. Sending them to a command that does not run costs them the afternoon anyway,
+and worse, it costs it while they are being told they are following instructions.
+
+Found by writing `docs/onboarding.md` and running what it said, which is what SC-001 is
+for. `docs/onboarding.md` currently documents the environment-variable form and carries a
+**Known gap** note pointing here; that note is removed by T054.
+
+### Implementation
+
+- [ ] T051 Add a `UserSecretsId` to `FitForge.Api.csproj` so the command the error message recommends actually runs.
+- [ ] T052 Verify the API reads a value set through user secrets, not only through `Database__ConnectionString`.
+- [ ] T053 Re-read `MissingConnectionStringMessage` against what now works and correct it if the wording still misleads.
+
+### Documentation
+
+- [ ] T054 Remove the **Known gap** note from `docs/onboarding.md` §2 and restore the user-secrets form as the recommended local-development path. (Governance territory — its own commit, not the code phase commit.)
+
+### Tests
+
+- [ ] T055 A test that the configured user-secrets identifier is present, so the next person to regenerate the csproj does not silently drop it and restore this defect.
+
+**Phase exit**: `dotnet build --warnaserror && dotnet test` exits 0, and the command quoted
+in the startup message, copied verbatim from that message, succeeds. Commit subject carries
+`phase 7`.
+
+---
+
 ## Dependencies & Execution Order
 
 - **Phase 1 → Phase 2**: phase 2 adds EF Core to projects phase 1 creates.

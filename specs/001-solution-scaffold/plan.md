@@ -229,6 +229,7 @@ Explicitly **not** approved: MediatR, AutoMapper, FluentValidation, a repository
 | 4 | The BFF seam | fitforge-web | `api-client.ts`, `/api/health`, the health indicator in the shell, mapping tests |
 | 5 | Binding the checks | governance + CI | `ritual-checks` required, out-of-Territory demonstration, `docs/onboarding.md` run instructions |
 | 6 | Bound the readiness check | fitforge-api | Added 2026-09-10 — a defect phase 4's end-to-end observation found; see `tasks.md` |
+| 7 | Make the startup message's own advice work | fitforge-api | Added 2026-09-10 — a defect writing `docs/onboarding.md` found; see `tasks.md` |
 
 Phase 3 is the UI phase: the Visual Compliance Loop (`docs/sdlc/review-process.md`) runs
 against `screenshots/fitforge-prototype.html` until the deviation table is empty or
