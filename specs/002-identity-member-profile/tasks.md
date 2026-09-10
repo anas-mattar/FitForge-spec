@@ -46,7 +46,7 @@ Plan decisions are cited as `D1`…`D13`; visual items as `VI-nnn`; requirements
 ### Tests
 
 - [x] T010 [P] `FitForge.Domain.Tests` — email normalization: mixed case, leading and trailing whitespace, and the two forms colliding.
-- [ ] T011 `FitForge.Api.Tests` — the migration applies to an empty database and its `down` drops both tables, leaving nothing behind (`rollback.md` asserts this; the assertion should be executed, not believed).
+- [ ] T011 `FitForge.Api.Tests` — the migration's `UpOperations` create exactly `Member` and `Profile`, and its `DownOperations` drop exactly those two, child first (`rollback.md` asserts the down-path is safe; the assertion should be executed, not believed). **Amendment approved by**: anas.m, 2026-09-10 — was "applies to an empty database"; no database is reachable from the authoring host or from CI, and the operations settle the same question without one (A1).
 - [x] T012 `FitForge.Domain.Tests` — the ADR guard still passes: `FitForge.Domain.csproj` declares no `PackageReference` and no `ProjectReference`. It exists from 001; this phase is the first real chance to break it.
 
 **T008 — the dedicated-database confirmation, recorded.** The configured target is
@@ -58,16 +58,28 @@ host, so the database's *contents* were not inspected. The name check passed; th
 emptiness check is owed to whoever first applies this migration, and it belongs in the
 gate run rather than in this record.
 
-**T011 is NOT done** — it asks for the migration to be applied to an empty database, and
-no database is reachable. See "Phase 1 amendment requests" below; it needs an approver
-who is not the implementing agent (constitution I, Amendment authority).
+**Gate (human-run) — critical-delivery item 3, audit evidence**
 
-**Gate (human-run)**: `dotnet build --warnaserror && dotnet test` in `fitforge-api`.
-Exit code: *(recorded here)* · scope-check: *(verdict)* · `git diff --stat`: *(summary)*
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | **0**, run by anas.m, 2026-09-10 |
+| Commit gated | `3279d50` |
+| `scope-check` | `PASS phase 1 commit 9a5bf35 (1 file(s))` — the governance side |
+| `scope-check-repos` | `PASS phase 1 commit 3279d50 (15 file(s))` — `fitforge-api` |
+| `git diff --stat` | 15 files changed, 1066 insertions(+), 2 deletions(-) |
 
-*The agent built and ran the suite while writing this phase — clean build, 37 tests pass.
-That is not the gate and is not recorded as one: critical-delivery item 4 puts the run
-that counts on the human side.*
+**The scope check failed first, and that is part of the record.** The initial phase 1
+commit `f4cd9e1` was rejected by `scripts/scope-check-repos.ps1` for touching
+`fitforge-api/src/FitForge.Api/FitForge.Api.csproj`, outside the declared Territory. It
+was reverted rather than licensed by a widened Territory — see A3 below. `3279d50` is the
+re-commit. A Critical feature's audit trail should show the check working, not only the
+green line it eventually produced.
+
+**T011 lands after this gate**, under amendment A1 (approved below), so phase 1 takes a
+second gate run on the commit that adds it. Recorded rather than folded in: the state that
+was gated and the final state of the phase are not the same commit, and saying otherwise
+would make this table a claim instead of a record.
 
 ---
 
@@ -349,7 +361,9 @@ an in-memory or SQLite provider, would need a package this plan has not approved
 Server — a bad check constraint expression, say. That risk moves to the first real
 `database update`, and `rollback.md`'s verification list is where it lands.
 
-**Approved by**: *(pending — anas.m)*
+**Amendment approved by**: anas.m, 2026-09-10
+
+T011's text is amended accordingly, above.
 
 ### A2 — `CK_Profile_BirthYear`'s upper bound
 
@@ -362,7 +376,10 @@ year". As shipped it reads `BETWEEN 1900 AND 2200`.
 the typo class (19, 20260) and leaves plausibility to application validation, which can
 compute the current year.
 
-**Approved by**: *(pending — anas.m)*
+**Amendment approved by**: anas.m, 2026-09-10
+
+`data-model.md`'s `Profile` table is amended to state the shipped bound, carrying the same
+approver line.
 
 ### A3 — withdrawn. The check caught it, and reverting was the right answer
 

@@ -68,7 +68,7 @@ has to handle its absence.
 | Column | Type | Notes |
 |---|---|---|
 | `MemberId` | `BIGINT NOT NULL` | `FK_Profile_Member`, **restrict**, `UQ_Profile_MemberId` |
-| `BirthYear` | `SMALLINT NULL` | `CK_Profile_BirthYear`, 1900 to the current year |
+| `BirthYear` | `SMALLINT NULL` | `CK_Profile_BirthYear`, between 1900 and 2200 |
 | `Sex` | `TINYINT NULL` | `0 Female`, `1 Male`, `2 PreferNotToSay` |
 | `HeightCm` | `DECIMAL(5,2) NULL` | centimetres, canonical (invariant 4) |
 | *(soft delete + audit as above)* | | |
@@ -76,6 +76,13 @@ has to handle its absence.
 One-to-one rather than columns on `Member`: `Member` is read on **every** authenticated
 request (session resolution); `Profile` is read on one screen. Keeping them apart keeps the
 hot row narrow.
+
+**The upper bound is a loose literal, not the current year.** *(Was "the current year".
+**Amendment approved by**: anas.m, 2026-09-10 — A1/A2 in `tasks.md`.)* A check constraint
+is baked into the schema when its migration runs, so `YEAR(GETDATE())` would freeze to the
+year of the migration and then drift: written in 2026, it would reject a birth year of
+2026 from 2027 onward. 2200 rejects the typo class — 19, 20260 — and leaves plausibility
+to application validation, which can compute the current year on every request.
 
 `HeightCm` is `DECIMAL(5,2)`, never a float — `database-rules.md` and invariant 4. A member
 who sets units to `lb / in` sees inches; the column does not change (FR-011).
