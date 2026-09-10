@@ -33,24 +33,41 @@ Plan decisions are cited as `D1`…`D13`; visual items as `VI-nnn`; requirements
 
 ### Implementation
 
-- [ ] T001 Add `src/FitForge.Domain/Members/Member.cs` — the entity of `data-model.md`, with `Id`, `PublicId`, the audit fields and the soft-delete fields. No attribute from any package: `FitForge.Domain` still references nothing (ADR-001 §4.2).
-- [ ] T002 [P] Add `src/FitForge.Domain/Members/Profile.cs` — `BirthYear`, `Sex`, `HeightCm` as `decimal?`, plus audit and soft-delete fields.
-- [ ] T003 [P] Add `src/FitForge.Domain/Members/UnitPreference.cs`, `Goal.cs`, `ExperienceLevel.cs`, `Sex.cs` — enums whose member order matches VI-019 to VI-021, since the select order is a visual requirement and the enum is where it will be read from.
-- [ ] T004 Add `src/FitForge.Domain/Members/EmailAddress.cs` — normalization as a pure function: trim, then `ToUpperInvariant`. One place, used by the entity and by every query (`data-model.md`, `Member`).
-- [ ] T005 Add `src/FitForge.Infrastructure/Persistence/Configurations/MemberConfiguration.cs` — column types exactly as `data-model.md` states, `UQ_Member_NormalizedEmail`, `UQ_Member_PublicId`, and a check constraint bounding each enum column to its defined range (`database-rules.md`, "Constraints Mirror Invariants").
-- [ ] T006 [P] Add `ProfileConfiguration.cs` — `FK_Profile_Member` with **restrict**, `UQ_Profile_MemberId`, `CK_Profile_BirthYear`, `HeightCm` as `DECIMAL(5,2)`.
-- [ ] T007 Add the two `DbSet` properties to `FitForgeDbContext` and a global query filter excluding soft-deleted rows (`database-rules.md`).
-- [ ] T008 Confirm the target database is dedicated to FitForge **before generating the first migration** — `database-rules.md`, "Setup". This is the first migration in the project's life and the check exists for exactly this moment.
-- [ ] T009 Generate migration `AddMemberAndProfile`. Read the generated SQL before committing it; a migration nobody read is a migration nobody can roll back.
+- [x] T001 Add `src/FitForge.Domain/Members/Member.cs` — the entity of `data-model.md`, with `Id`, `PublicId`, the audit fields and the soft-delete fields. No attribute from any package: `FitForge.Domain` still references nothing (ADR-001 §4.2).
+- [x] T002 [P] Add `src/FitForge.Domain/Members/Profile.cs` — `BirthYear`, `Sex`, `HeightCm` as `decimal?`, plus audit and soft-delete fields.
+- [x] T003 [P] Add `src/FitForge.Domain/Members/UnitPreference.cs`, `Goal.cs`, `ExperienceLevel.cs`, `Sex.cs` — enums whose member order matches VI-019 to VI-021, since the select order is a visual requirement and the enum is where it will be read from.
+- [x] T004 Add `src/FitForge.Domain/Members/EmailAddress.cs` — normalization as a pure function: trim, then `ToUpperInvariant`. One place, used by the entity and by every query (`data-model.md`, `Member`).
+- [x] T005 Add `src/FitForge.Infrastructure/Persistence/Configurations/MemberConfiguration.cs` — column types exactly as `data-model.md` states, `UQ_Member_NormalizedEmail`, `UQ_Member_PublicId`, and a check constraint bounding each enum column to its defined range (`database-rules.md`, "Constraints Mirror Invariants").
+- [x] T006 [P] Add `ProfileConfiguration.cs` — `FK_Profile_Member` with **restrict**, `UQ_Profile_MemberId`, `CK_Profile_BirthYear`, `HeightCm` as `DECIMAL(5,2)`.
+- [x] T007 Add the two `DbSet` properties to `FitForgeDbContext` and a global query filter excluding soft-deleted rows (`database-rules.md`).
+- [x] T008 Confirm the target database is dedicated to FitForge **before generating the first migration** — `database-rules.md`, "Setup". This is the first migration in the project's life and the check exists for exactly this moment.
+- [x] T009 Generate migration `AddMemberAndProfile`. Read the generated SQL before committing it; a migration nobody read is a migration nobody can roll back.
 
 ### Tests
 
-- [ ] T010 [P] `FitForge.Domain.Tests` — email normalization: mixed case, leading and trailing whitespace, and the two forms colliding.
+- [x] T010 [P] `FitForge.Domain.Tests` — email normalization: mixed case, leading and trailing whitespace, and the two forms colliding.
 - [ ] T011 `FitForge.Api.Tests` — the migration applies to an empty database and its `down` drops both tables, leaving nothing behind (`rollback.md` asserts this; the assertion should be executed, not believed).
-- [ ] T012 `FitForge.Domain.Tests` — the ADR guard still passes: `FitForge.Domain.csproj` declares no `PackageReference` and no `ProjectReference`. It exists from 001; this phase is the first real chance to break it.
+- [x] T012 `FitForge.Domain.Tests` — the ADR guard still passes: `FitForge.Domain.csproj` declares no `PackageReference` and no `ProjectReference`. It exists from 001; this phase is the first real chance to break it.
+
+**T008 — the dedicated-database confirmation, recorded.** The configured target is
+`Server=localhost;Database=FitForgeDev;Trusted_Connection=True` (from user-secrets; the
+value is never in source). The name is FitForge's own, not one inherited from another
+project's local setup — which is the trap `database-rules.md` "Setup" describes. **What
+could not be confirmed**: the SQL Server instance was not reachable from the authoring
+host, so the database's *contents* were not inspected. The name check passed; the
+emptiness check is owed to whoever first applies this migration, and it belongs in the
+gate run rather than in this record.
+
+**T011 is NOT done** — it asks for the migration to be applied to an empty database, and
+no database is reachable. See "Phase 1 amendment requests" below; it needs an approver
+who is not the implementing agent (constitution I, Amendment authority).
 
 **Gate (human-run)**: `dotnet build --warnaserror && dotnet test` in `fitforge-api`.
 Exit code: *(recorded here)* · scope-check: *(verdict)* · `git diff --stat`: *(summary)*
+
+*The agent built and ran the suite while writing this phase — clean build, 37 tests pass.
+That is not the gate and is not recorded as one: critical-delivery item 4 puts the run
+that counts on the human side.*
 
 ---
 
@@ -307,3 +324,73 @@ Recorded so the next reader does not go looking:
 - **"Export my data"** — no spec defines its contents or format.
 - **Anything computing a day or week boundary** — there is no training data yet. D10 exists
   so feature 007 inherits a validated zone rather than a free-text column.
+
+---
+
+## Phase 1 amendment requests (awaiting an approver)
+
+Constitution I, **Amendment authority**: a change to this file, `plan.md`, `spec.md` or
+`contracts/` after approval records who approved it, and **an implementing agent MUST NOT
+approve its own amendment**. Three items came up during phase 1. None is applied.
+
+### A1 — T011's method (blocking T011)
+
+**Asks**: change T011 from "the migration applies to an empty database and its `down`
+drops both tables" to "the migration's `UpOperations` create exactly `Member` and
+`Profile`, and its `DownOperations` drop exactly those two, child first".
+
+**Why**: no SQL Server instance is reachable from the authoring host, and CI has none
+either — 001's tests stub the database rather than provisioning one. Applying a migration
+needs a real database; reading its operations does not, and it settles the question T011
+was written to settle (is the down-path safe and complete?) without one. The alternative,
+an in-memory or SQLite provider, would need a package this plan has not approved.
+
+**What is lost**: this would not catch a migration that is valid C# but fails against SQL
+Server — a bad check constraint expression, say. That risk moves to the first real
+`database update`, and `rollback.md`'s verification list is where it lands.
+
+**Approved by**: *(pending — anas.m)*
+
+### A2 — `CK_Profile_BirthYear`'s upper bound
+
+**Asks**: `data-model.md` says the constraint bounds `BirthYear` to "1900 to the current
+year". As shipped it reads `BETWEEN 1900 AND 2200`.
+
+**Why**: a check constraint is baked into the schema when the migration runs, so
+`YEAR(GETDATE())` would freeze to the year of the migration and then quietly drift — by
+2027 it would reject a birth year of 2026. A literal that is deliberately loose rejects
+the typo class (19, 20260) and leaves plausibility to application validation, which can
+compute the current year.
+
+**Approved by**: *(pending — anas.m)*
+
+### A3 — withdrawn. The check caught it, and reverting was the right answer
+
+**What happened**: `dotnet ef migrations add` resolves the `DbContext` through the
+**startup** project, so it failed until `Microsoft.EntityFrameworkCore.Design` was
+referenced by `FitForge.Api`. That file is not in phase 1's Territory, and
+`scripts/scope-check-repos.ps1` said so:
+
+```text
+scope-repos: fitforge-api: FAIL phase 1 commit f4cd9e1:
+  fitforge-api/src/FitForge.Api/FitForge.Api.csproj not in territory
+```
+
+It offered two remediations — revert, or widen the Territory in a governance commit made
+before the code commit, with owner approval. **Reverted.** Widening a Territory to fit a
+change already made is the retroactive move the rule exists to prevent, and the amendment
+that would have licensed it is one the implementing agent may not approve.
+
+The reference is not needed again until phase 3 generates
+`AddSessionAndSignInAttempt`, and phase 3's Territory already includes
+`fitforge-api/src/FitForge.Api/**`. So T023 carries it: generating that migration means
+adding the reference, in a phase where it is declared. **No amendment is owed** — which is
+why this request is withdrawn rather than pending.
+
+The phase 1 migration itself is unaffected: it was generated while the reference was
+present, and the generated files live in `FitForge.Infrastructure`, which has its own
+copy. The build is clean without it.
+
+**This is the first time a machine check, rather than a reviewer, caught a scope error in
+FitForge** — and it was in a nested code repository, which is precisely the blindness kit
+feature 012 (GAP-016) closed. The check was worth building.
