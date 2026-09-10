@@ -166,18 +166,24 @@ two mechanisms that make D2 reversible and FR-004 true that standard is not opti
 
 ### Tests
 
-- [ ] T029 [P] `FitForge.Api.Tests` — resolve succeeds for a live session; fails for expired, for revoked, for unknown, and for a session whose member is soft-deleted. Four cases, one message. **BLOCKED — see A4.**
-- [ ] T030 `FitForge.Api.Tests` — the stored `TokenHash` is not the token, and no column anywhere holds the token (D3). Asserted against the database, not against the code. **BLOCKED — see A4.**
-- [ ] T031 `FitForge.Api.Tests` — sliding expiry extends at most once per hour. **BLOCKED — see A4.**
+- [~] T029 → **moved to phase 11 as T105** (A4, approved anas.m 2026-09-10): it cannot precede the database wiring it needs.
+- [~] T030 → **moved to phase 11 as T106**.
+- [~] T031 → **moved to phase 11 as T107**.
 - [x] T031b Partial coverage that needs no database: every shape of missing or malformed credential is refused identically, and an unauthenticated request never reaches persistence. Named as partial in the file rather than left to look like coverage it is not.
 
-**Phase 3 is INCOMPLETE.** The implementation is done and committed; three of its four tests
-cannot be written until A4 is decided. The phase does not take its gate until they exist —
-session resolution is the mechanism invariant 2 rests on, and shipping it on a
-credential-shape test would be the "looks like a gate but isn't" failure this project keeps
-finding in other people's work.
+**Phase 3 is complete as scoped**, with T029–T031 moved to phase 11 under A4. It gates on
+the implementation plus T031b; the tests that prove its central mechanism arrive one phase
+later, a cost argued in A4 rather than glossed.
 
-**Gate (human-run)**: deferred until T029–T031 exist.
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | `c4c817e` |
+| `scope-check-repos` | `PASS phase 3 commit c4c817e (16 file(s))` |
+| `git diff --stat` | 16 files changed |
 
 ---
 
@@ -486,4 +492,77 @@ include `.github/**`, and the CI change lives there. Either widen it in a govern
 made **before** the CI commit, or give the CI wiring its own phase. I would rather you chose
 than have me pick the one that happens to be less work.
 
-**Amendment approved by**: *(pending — anas.m)*
+**Amendment approved by**: anas.m, 2026-09-10 — **option (a), and the CI wiring gets its
+own phase.**
+
+### Why the new phase is numbered 11 and not 4
+
+It runs **next**, before phases 4 through 10, because every one of their tests needs the
+database it wires up. It is numbered 11 anyway.
+
+Inserting it as phase 4 would renumber 4->5 ... 10->11, and phase numbers are not only in
+this file: they are in comments inside commits that have already been gated.
+`MemberConfiguration.cs` cites "the retention service (phase 6)",
+`AddMemberAndProfileMigrationTests.cs` the same, `SignInAttempt.cs` likewise. Renumbering
+makes each of those false, and correcting them means editing gated code, which means
+re-gating phases 1 and 3 to fix a numbering choice.
+
+Worse, `fitforge-api` also carries comments citing **feature 001's** phases 7 and 8
+(`UserSecretsIdTests.cs`, `HealthReadyTests.cs`, `DependencyInjection.cs`). A file holding
+"phase 8" meaning 001 beside "phase 8" meaning a renumbered 002 is a trap for the next
+reader.
+
+So: numeric order is identity, not schedule. The execution order is stated in `plan.md`
+§8 and here, and `scripts/scope-check-repos.ps1` grades by the `phase N` token against
+that phase's declared Territory, which is unaffected either way.
+
+### T029-T031 move to phase 11
+
+They cannot precede the wiring they depend on. Phase 3 therefore takes its gate covering
+the implementation and T031b; phase 11 delivers the fixture, the CI service container, and
+the three session tests.
+
+**Stated plainly because it is a real cost**: phase 3 gates without the tests that prove
+its central mechanism. The alternative - holding phase 3 ungated and unmerged until phase
+11 lands - trades one discomfort for a longer-lived one. The tests arrive one phase later,
+and this paragraph is what stops that being quietly forgotten.
+
+**Amendment approved by**: anas.m, 2026-09-10
+
+---
+
+## Phase 11: Test database wiring (runs next — before phases 4–10)
+
+**Added 2026-09-10 by amendment A4. Amendment approved by**: anas.m, 2026-09-10.
+
+**Goal**: give the tests a real SQL Server, locally and in CI, so every later phase asserts
+against the engine that ships rather than a stand-in.
+
+**Independent Test**: `dotnet test` passes against a database it created and dropped; the
+three session tests moved here pass, and each fails when the behaviour it covers is broken.
+
+**Territory**:
+
+- `fitforge-api/tests/**`
+- `fitforge-api/.github/workflows/project-gate.yml`
+
+### Implementation
+
+- [ ] T103 Add `tests/FitForge.Api.Tests/SqlServerDatabase.cs` — a fixture that creates a uniquely-named database, applies **the migrations** (not `EnsureCreated`, which builds from the model and would test a schema that never ships), and drops it on dispose.
+- [ ] T104 Resolve the connection string from `FITFORGE_TEST_SQL`, falling back to LocalDB so a developer on Windows needs no setup. **No credential in source** (constitution VI).
+- [ ] T105 (was T029) Resolve succeeds for a live session; fails for expired, for revoked, for unknown, and for a session whose member is soft-deleted. Four cases, one answer.
+- [ ] T106 (was T030) The stored `TokenHash` is not the token, and no column anywhere holds it — asserted against the database, not against the code.
+- [ ] T107 (was T031) Sliding expiry extends at most once per hour.
+- [ ] T108 Add an `mssql/server` service container to `.github/workflows/project-gate.yml` and pass `FITFORGE_TEST_SQL` to the test step. The `sa` password comes from a repository **secret**, never inlined — and the workflow fails loudly if the secret is absent rather than silently skipping the database tests.
+
+### Why this earns its own gate
+
+Two things make it more than plumbing. It retires A1's stated residual — T011 could not
+catch "a migration that is valid C# but fails against SQL Server", and once migrations are
+applied against a real server on every test run, nobody is carrying that risk. And SC-002,
+the cross-member read test that is the whole reason this feature is Critical, is worth
+something only against a database that actually enforces the unique index and the foreign
+key. This phase is the prerequisite for the feature's headline claim being testable at all.
+
+**Gate (human-run)**: `dotnet build --warnaserror && dotnet test` in `fitforge-api`.
+The run needs Docker or LocalDB available.

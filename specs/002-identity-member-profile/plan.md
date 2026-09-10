@@ -418,6 +418,7 @@ kit's own practice on every feature it has ever shipped.
 | 8 | Route protection | fitforge-web | Redirect for unauthenticated routes, no shell on sign-in (VI-015), `GET /bff/me` |
 | 9 | Profile | fitforge-web | The screen to VI-017…VI-028, the four member BFF routes, display conversion. **Visual Compliance Loop** |
 | 10 | Audit evidence | governance | Critical item 3: gate commands and exit codes, scope-check verdicts, diff stats, both review checklists |
+| 11 | Test database wiring | fitforge-api + its CI | **Added by amendment A4; approved by anas.m, 2026-09-10.** A real SQL Server for the tests — a migration-applying fixture locally, an `mssql/server` service container in CI — plus the three session tests moved from phase 3. **Runs next, before phases 4–10**, because every one of their tests depends on it; numbered 11 rather than inserted as 4 because renumbering would falsify phase citations inside already-gated commits, some of which refer to *feature 001's* phases. `tasks.md` A4 carries the reasoning |
 
 Phases 7 and 9 are the UI phases: the Visual Compliance Loop
 (`docs/sdlc/review-process.md`) runs against this feature's `screenshots/` until the
