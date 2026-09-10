@@ -505,17 +505,72 @@ owed at review.
 
 ### Implementation
 
-- [ ] T082 Redirect an unauthenticated visitor from every authenticated route to sign-in, rendering **no** member data on the way (FR-007).
-- [ ] T083 Render the sign-in route with **no app shell** — no sidebar, no bottom bar, no header (VI-015). This is a route-group decision, not a conditional inside the shell.
-- [ ] T084 Add `GET /api/bff/me` and have the shell read the member from it server-side.
-- [ ] T085 Ensure the back button after sign-out does not restore an authenticated view — the response carries no-store, and the shell re-reads the session on every navigation (US1 scenario 5).
+- [x] T082 Redirect an unauthenticated visitor from every authenticated route to sign-in, rendering **no** member data on the way (FR-007).
+- [x] T083 Render the sign-in route with **no app shell** — no sidebar, no bottom bar, no header (VI-015). This is a route-group decision, not a conditional inside the shell.
+- [x] T084 Add `GET /api/bff/me` and have the shell read the member from it server-side.
+- [x] T085 Ensure the back button after sign-out does not restore an authenticated view — the response carries no-store, and the shell re-reads the session on every navigation (US1 scenario 5).
 
 ### Tests
 
-- [ ] T086 [P] Vitest — an unauthenticated request to an authenticated route redirects and renders no member data.
-- [ ] T087 Vitest — the sign-in route renders no shell element.
+- [x] T086 [P] Vitest — an unauthenticated request to an authenticated route redirects and renders no member data.
+- [x] T087 Vitest — the sign-in route renders no shell element.
 
-**Gate (human-run)**: as phase 7.
+### One decision, in one place
+
+The gate is the `(app)` layout, and **nothing else decides who is signed in**. The
+tempting second mechanism — a cookie-presence check in the proxy, for a cheap early
+redirect — was rejected: a cookie proves someone *once* had a session, not that they
+still do. Expired, revoked and belonging-to-a-deleted-member are indistinguishable from
+the cookie and identical to the layout, so a proxy check would be a second opinion that
+disagrees with the authoritative one on exactly the cases that matter.
+
+Doing it in the **layout** rather than in each page is what makes FR-007's second half
+true — "without rendering member data". The redirect is thrown before any child renders,
+so there is no window in which a page runs without a member and improvises. T086 asserts
+that directly: the layout returns nothing, not merely a redirect status.
+
+### T085 — the header lands in production, and not in dev
+
+Measured on both, because the difference would mislead a reviewer:
+
+| Response | dev | production |
+|---|---|---|
+| `/` (authenticated) | `no-cache, must-revalidate` — **Next's own header wins** | `no-store, must-revalidate` — the proxy's |
+| `/api/bff/me` | `no-store, must-revalidate` | `no-store, must-revalidate` |
+| `/sign-in` (public, no member data) | `no-cache, must-revalidate` | `s-maxage=31536000` — cacheable, deliberately |
+
+A reviewer checking this in `npm run dev` would see `no-cache` and conclude the proxy
+does nothing. It does; the dev server overrides page headers. Recorded here so that
+conclusion is not reached twice.
+
+`/sign-in` is skipped by the proxy on purpose — it carries no member data, and making
+the one public screen uncacheable would be a cost with nothing bought.
+
+### Two things found while building it
+
+**`middleware.ts` is deprecated in Next 16.** It warned on every request and pointed at
+`proxy.ts`. Migrated rather than shipped — writing new code against a convention the
+framework is already deprecating buys nothing and costs a migration later.
+
+**A 500 that was not one.** The first `curl /` returned 500; the server log showed
+`GET / 307`. The 500 was a compile-time error page from a request that arrived while the
+route was still building. Recorded because the obvious reading — "the redirect is
+broken" — was wrong, and chasing it would have cost an hour.
+
+### Mutation-checked
+
+Disabling the "session is not usable" branch — so a stale cookie renders the shell —
+fails 2 of 66. That is the branch a cookie-presence check would have got wrong.
+
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `npm run lint && npm run build && npm run typecheck && npm test` in `fitforge-web` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | `26a083d` |
+| `scope-check-repos` | `PASS phase 8 commit 26a083d (7 file(s))` |
+| `git diff --stat` | 7 files changed, 332 insertions(+), 14 deletions(-) |
 
 ---
 
