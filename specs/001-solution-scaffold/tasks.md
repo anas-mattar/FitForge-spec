@@ -288,6 +288,14 @@ Added 2026-09-10 from `ai-code-review-web.md`.
 **Territory**:
 
 - `fitforge-web/src/**`
+- `fitforge-web/vitest.config.mts`
+
+**Territory amended before implementation**, same clause, same approver: T067's test
+imports the route, the route imports `@/lib/api-client`, and vitest does not read
+`tsconfig` path aliases — verified, not assumed, with a throwaway probe test that failed
+to resolve `@/lib/utils`. The repository has no vitest config at all today, which is why
+the existing tests all use relative imports. Adding one is the smallest fix; rewriting the
+route's imports to be relative would bend production code around a test runner.
 
 ### Implementation
 
