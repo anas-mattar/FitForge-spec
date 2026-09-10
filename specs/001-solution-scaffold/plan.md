@@ -208,7 +208,12 @@ stated this way because it is checkable, and a rule nobody can check is a rule n
 
 Nothing outside this list may be added without amending this plan (constitution IV).
 
-**fitforge-api**: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design`, `Microsoft.Extensions.Diagnostics.HealthChecks`, `AspNetCore.HealthChecks.SqlServer`; test-side `xunit`, `Microsoft.AspNetCore.Mvc.Testing`, `FluentAssertions`.
+**fitforge-api**: `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design`, `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore`; test-side `xunit`, `Microsoft.AspNetCore.Mvc.Testing`.
+
+*Amended 2026-09-10, before the phase 2 commit.* Two changes, both narrowing:
+
+- `AspNetCore.HealthChecks.SqlServer` → `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore`. The third-party package's newest release is 9.0.0 and carries its own `Microsoft.Data.SqlClient`, which on a .NET 10 stack means a second SQL client version resolved against EF Core 10's. The first-party package ships 10.0.12, aligned with everything else here, and checks the `DbContext` we already own rather than opening a connection of its own. `Microsoft.Extensions.Diagnostics.HealthChecks` is dropped from the list because the ASP.NET Core shared framework already provides it — it was never a package we needed to add.
+- `FluentAssertions` dropped, not replaced. Its version 8 licence change makes it a commercial dependency for some uses; plain xUnit assertions cost nothing here. Removing an approved package needs no approval, but it is recorded so a later reader does not add it back expecting it was always intended.
 
 **fitforge-web**: `tailwindcss-animate`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `server-only` (all shadcn/ui prerequisites), and `next-themes` **only if** the hand-written theme script proves insufficient — preferred outcome is not adding it.
 
