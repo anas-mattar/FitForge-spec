@@ -127,9 +127,9 @@ about SC-002 — the same standard applies to the tests that reach it.
 |---|---|
 | Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
 | **Exit code** | *(pending — human-run)* |
-| Commit gated | *(filled at push)* |
-| `scope-check-repos` | *(verdict)* |
-| `git diff --stat` | *(summary)* |
+| Commit gated | `4b56aa7` |
+| `scope-check-repos` | `PASS phase 2 commit 4b56aa7 (6 file(s))` |
+| `git diff --stat` | 6 files changed, 628 insertions(+) |
 
 **Mutation-checked, not assumed.** The two assertions this phase rests on were each broken
 on purpose to confirm they fail:
