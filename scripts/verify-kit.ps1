@@ -39,6 +39,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new() } catch {}
+. (Join-Path $PSScriptRoot 'adoption-lib.ps1')
 
 $findings = [System.Collections.Generic.List[object]]::new()
 function Add-Finding {
@@ -246,6 +247,32 @@ try {
                 }
             } elseif ($record.topology -eq 'multi' -and -not $repoFail) {
                 Add-Finding WARN 'record' 'multi-repo adoption declares no codeRepos (absent, empty, or all entries unusable)' 'declare the nested code repositories so the machine scope check reaches the code (scripts/scope-check-repos.ps1; adoption/updating.md) — without it, code phase commits are reviewer-verified only'
+            }
+
+            # developers (013): who the project's developers are, which selects the
+            # Critical lane's evidence mode in scripts/enforcement-pack.ps1.
+            #
+            # Read through the SAME function the check uses (scripts/adoption-lib.ps1), not
+            # a second copy of the rules. The copies drifted inside feature 013 — the
+            # root-object guard landed in the enforcing one only — and the divergence was
+            # found by a reviewer reading a comment asserting they matched. A comment is not
+            # a mechanism; one function is.
+            #
+            # Absence is NOT a finding. Every adoption predating 013 declares nothing and is
+            # treated as solo, the stricter arm. A malformed value IS a finding, because the
+            # check falls back silently and the project would otherwise never learn its
+            # declaration is being ignored — so the mode is always stated alongside.
+            # Gated on the library's own Declared rather than a second raw-text test of our
+            # own. A private notion of "does this record declare developers" is precisely the
+            # duplicated interpretation this library exists to remove, and one had grown here
+            # (013 phase 5 review, NEW-6 / NEW-D) — including the last unguarded read in the
+            # new code.
+            $devMode = Get-DeveloperMode -Root $Root
+            if ($devMode.Declared) {
+                foreach ($problem in $devMode.Problems) {
+                    Add-Finding FAIL 'record' $problem.Message $problem.Fix
+                }
+                Add-Finding ok 'record' "$($devMode.Count) developer(s) declared — Critical features use the $($devMode.Mode) evidence rule (docs/sdlc/critical-delivery.md item 5)" ''
             }
 
             $proofOk = @($record.gateProof) | Where-Object { $_.exitCode -eq 0 }

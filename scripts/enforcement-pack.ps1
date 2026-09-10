@@ -28,8 +28,26 @@
                          domain invariants); migrations are always prohibited on this lane
                          regardless of file count; more than $Config.AbuseGuardFileCount
                          changed files fails as well, suggesting promotion to a feature.
-      - CriticalEvidence (NNN-* branches declared Critical): second-model-review.md exists
-                         and was first committed at least $Config.CoolingOffHours ago.
+      - CriticalEvidence (NNN-* branches declared Critical): the independence evidence
+                         docs/sdlc/critical-delivery.md item 5 requires, in one of two
+                         MODES selected by the 'developers' array in kit-adoption.json.
+                         SOLO (one developer declared, or nothing usable declared):
+                         second-model-review.md exists and was first committed at least
+                         $Config.CoolingOffHours ago — the solo substitute, unchanged.
+                         TEAM (two or more declared): human-pr-review.md carries a filled
+                         '## Review Provenance' block naming a Reviewer who is not the
+                         Owner, plus the verbatim attestation; no cooling-off applies,
+                         because the independence is real rather than substituted.
+                         Absence of any kind selects SOLO — the stricter branch — so a
+                         project that declares nothing keeps the behaviour it has today.
+                         The team artifact is read from the COMMITTED blob, never the
+                         working tree: uncommitted edits are not evidence.
+                         How strong is TEAM? Two names written by the same team, in one
+                         file: it converts a silent omission into a written claim a human
+                         reviewer can falsify, and it is worth exactly that much — the
+                         strength of the Reviewer Provenance block, no more (FR-007). The
+                         declared roster is COUNTED to pick the mode and is never compared
+                         against either name.
       - PhaseSizeWarning (NNN-* branches): non-blocking warning when a single commit's
                          diff exceeds the configured line/file thresholds.
       - GateCertification (NNN-* branches): the '**Gate Certification**' declaration —
@@ -71,6 +89,7 @@ $ErrorActionPreference = 'Stop'
 # decoding so non-ASCII filenames round-trip on Windows consoles too (phase 2 review, F2).
 try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new() } catch {}
 $Root = (Resolve-Path $Root).Path
+. (Join-Path $PSScriptRoot 'adoption-lib.ps1')
 Push-Location $Root
 try {
 
@@ -211,7 +230,12 @@ function Invoke-LiteAndAbuseCheck {
     }
 }
 
-# --- Critical-evidence check (FR-005) ---
+# The evidence mode comes from scripts/adoption-lib.ps1, dot-sourced above, so this check and
+# the adoption doctor read the record through the SAME function. They were two copies until
+# phase 5 and drifted twice inside one feature (013 phase 4 re-review, docs NEW-1).
+function Get-EvidenceMode { return (Get-DeveloperMode -Root $Root) }
+
+# --- Critical-evidence check (FR-005; modes added by 013) ---
 function Invoke-CriticalEvidenceCheck {
     param([string]$Branch)
     if ($Branch -notmatch '^\d{3}-') { return }
@@ -220,7 +244,19 @@ function Invoke-CriticalEvidenceCheck {
     if (-not (Test-Path $specPath)) { return }
     if ((Get-DeliveryLevel -SpecPath $specPath) -notmatch '^Critical\b') { return }
 
-    $reviewPath = Join-Path $dir 'second-model-review.md'
+    $mode = Get-EvidenceMode
+    if ($mode.Mode -eq 'team') {
+        Invoke-CriticalTeamEvidence -Dir $dir -Why $mode.Why
+    } else {
+        Invoke-CriticalSoloEvidence -Dir $dir
+    }
+}
+
+# SOLO: the substitute. Moved verbatim from the pre-013 check — same order, same
+# conditions, same message strings, so a solo project cannot tell this feature happened.
+function Invoke-CriticalSoloEvidence {
+    param([string]$Dir)
+    $reviewPath = Join-Path $Dir 'second-model-review.md'
     if (-not (Test-Path $reviewPath)) {
         $script:failures += "CriticalEvidence: $dir/second-model-review.md is missing (required for Critical features — docs/sdlc/critical-delivery.md item 5)"
         return
@@ -236,6 +272,128 @@ function Invoke-CriticalEvidenceCheck {
         $remaining = [math]::Ceiling($Config.CoolingOffHours - $elapsedHours)
         $script:failures += "CriticalEvidence: $dir/second-model-review.md was recorded $([math]::Round($elapsedHours, 1))h ago — cooling-off requires $($Config.CoolingOffHours)h ($remaining h remaining, docs/sdlc/critical-delivery.md item 5)"
     }
+}
+
+# TEAM: the real thing rather than the substitute — item 5's actual requirement, that the
+# human reviewer is not the feature's owner. No cooling-off: the period exists to give a
+# solo developer distance from their own work, and a second person already is that.
+#
+# Three parsing rules, each of which a phase-3 fresh-context review demonstrated was needed:
+#   1. The file must be COMMITTED. A Critical feature cannot use ci-held, so its authoritative
+#      gate is a human's local run — precisely where an untracked file on one developer's disk
+#      would otherwise satisfy the only machine enforcement of item 5. The solo arm has always
+#      had this guard; the team arm shipped without it (logic review, BLOCKING 1).
+#   2. HTML comments are stripped FIRST, including an unterminated one, because that is what a
+#      renderer does. A provenance block wrapped in <!-- --> renders as nothing and used to
+#      pass — contract M13's rule, which Get-VisiblePlanLines already states, applied here
+#      (logic review, BLOCKING 2).
+#   3. Both names AND the attestation are read from inside the section slice only. The document
+#      header carries its own '**Reviewer**:' field (006 phase-2 F1), and matching the
+#      attestation against the whole file let it be satisfied from an unrelated comment.
+#
+# The roster in kit-adoption.json is COUNTED and nothing more: it selects the mode, and is
+# never compared against Reviewer or Owner. A review naming two people who are not in the
+# roster passes. That limit is deliberate and recorded rather than hidden — cross-checking
+# free-text names against a free-text roster would read as verification while providing none.
+function Invoke-CriticalTeamEvidence {
+    param([string]$Dir, [string]$Why)
+    $attestation = 'This reviewer is not the owner of the feature under review.'
+    $reviewPath = Join-Path $Dir 'human-pr-review.md'
+
+    if (-not (Test-Path -LiteralPath $reviewPath)) {
+        $script:failures += "CriticalEvidence: $Dir/human-pr-review.md is missing — team mode ($Why) requires the independent human review itself, not the solo substitute (docs/sdlc/critical-delivery.md item 5)"
+        return
+    }
+    # Read the COMMITTED blob, not the working tree. A history check alone only proved the
+    # PATH was committed: copy the template in early, fill it locally at review time, never
+    # commit, and the check passed on content the branch does not carry (013 phase 4
+    # re-review, N1). Critical forbids ci-held, so the authoritative gate is the human's
+    # local run — the one place that hole mattered most.
+    # $Dir is built with forward slashes ("specs/$Branch"), which is what git wants — no
+    # separator translation, and therefore no regex to get wrong.
+    # The './' matters. Without it git resolves HEAD:<path> against the REPOSITORY root, while
+    # every other path here is relative to $Root — so a governance repo living in a
+    # subdirectory reported a correctly committed review as uncommitted. With it, git resolves
+    # against the current directory, which Push-Location $Root already set (013 phase 5
+    # review, NEW-A). Exit code alone decides: a committed but EMPTY file yields $null and
+    # must not be called uncommitted (NEW-C) — it fails the section check instead, correctly.
+    $blob = (git show "HEAD:./$Dir/human-pr-review.md" 2>$null)
+    if ($LASTEXITCODE -ne 0) {
+        $script:failures += "CriticalEvidence: $Dir/human-pr-review.md is not committed — evidence that exists only in a working tree is not evidence (commit it; FR-006 requires the identities to be read from committed artifacts)"
+        return
+    }
+    $content = ConvertTo-VisibleText -Text ($blob -join "`n")
+    if ($content -notmatch '(?m)^##\s+Review Provenance') {
+        $script:failures += "CriticalEvidence: $Dir/human-pr-review.md has no visible '## Review Provenance' section — team mode ($Why) needs the reviewer and owner named in the review itself (specs/_templates/human-pr-review-template.md). Content inside an HTML comment does not count, and an UNTERMINATED '<!--' anywhere earlier in the file hides everything after it — check for a comment missing its '-->'"
+        return
+    }
+    $slice = if ($content -match '(?ms)^##\s+Review Provenance\s*$(.*?)(?=^##\s|\z)') { $matches[1] } else { '' }
+    # Code inside the section is illustration, not a declaration — in every form it can take:
+    # backtick fences, tilde fences, and 4-space-indented blocks (013 phase 3 review NIT 7,
+    # phase 4 re-review N3, which found the first fix caught only the backtick form).
+    $slice = [regex]::Replace($slice, '(?ms)^(?:```|~~~).*?(^(?:```|~~~)|\z)', '')
+    # An indented code block requires a preceding blank line; 4 spaces INSIDE a list is a
+    # nested item, not code, and dropping those lines hid legitimate values (013 phase 5
+    # review, NEW-B). Only strip an indented run that opens after a blank line.
+    $sliceLines = $slice -split "`n"
+    $kept = [System.Collections.Generic.List[string]]::new()
+    $inIndentedCode = $false
+    for ($i = 0; $i -lt $sliceLines.Count; $i++) {
+        $line = $sliceLines[$i]
+        $isIndented = $line -match '^(?: {4,}|	)\S'
+        if ($isIndented -and -not $inIndentedCode) {
+            $prev = if ($i -gt 0) { $sliceLines[$i - 1] } else { '' }
+            $inIndentedCode = [string]::IsNullOrWhiteSpace($prev)
+        } elseif (-not $isIndented -and -not [string]::IsNullOrWhiteSpace($line)) {
+            $inIndentedCode = $false
+        }
+        if (-not ($isIndented -and $inIndentedCode)) { $kept.Add($line) }
+    }
+    $slice = $kept -join "`n"
+
+    $reviewer = Get-ProvenanceValue -Slice $slice -Field 'Reviewer'
+    $owner = Get-ProvenanceValue -Slice $slice -Field 'Owner'
+
+    # A bare [bracketed] value is the template placeholder; '[Name](mailto:...)' is a
+    # perfectly ordinary markdown link and must not be mistaken for one (logic review, NIT 6).
+    $placeholder = '^\[[^\]]*\]\s*$'
+    foreach ($pair in @(@{ N = 'Reviewer'; V = $reviewer }, @{ N = 'Owner'; V = $owner })) {
+        if (-not $pair.V) {
+            $script:failures += "CriticalEvidence: $Dir/human-pr-review.md has no filled '**$($pair.N)**:' line inside its Review Provenance section (team mode — $Why)"
+        } elseif ($pair.V -match $placeholder) {
+            $script:failures += "CriticalEvidence: $Dir/human-pr-review.md leaves '**$($pair.N)**: $($pair.V)' as a template placeholder — team mode ($Why) needs the actual name"
+        }
+    }
+    if ($reviewer -and $owner -and $reviewer -notmatch $placeholder -and $owner -notmatch $placeholder) {
+        if ($reviewer -ieq $owner) {
+            $script:failures += "CriticalEvidence: $Dir/human-pr-review.md names '$reviewer' as both reviewer and owner — the human reviewer of a Critical feature MUST NOT be its owner (docs/sdlc/critical-delivery.md item 5; docs/sdlc/team-workflow.md rule 4)"
+        }
+    }
+    if ($slice -notmatch [regex]::Escape($attestation)) {
+        $script:failures += "CriticalEvidence: $Dir/human-pr-review.md is missing the verbatim attestation sentence '$attestation' from its Review Provenance section (team mode — $Why)"
+    }
+}
+
+# A file as a reader sees it: HTML comments removed, closed ones first and then an
+# UNTERMINATED '<!--' through to end of file — a renderer swallows the rest of the document,
+# so a check that keeps reading is reading text nobody can see. Get-VisiblePlanLines applies
+# the same rule line-wise for plan headers (contract M13); this returns whole text because
+# the provenance parser needs to slice sections out of it.
+function ConvertTo-VisibleText {
+    param([string]$Text)
+    $stripped = [regex]::Replace($Text, '(?s)<!--.*?-->', '')
+    # Ordinal: the culture-sensitive overload can match a marker a renderer never sees — a
+    # soft hyphen inside '<!--' is enough (013 phase 4 re-review, N4).
+    $dangling = $stripped.IndexOf('<!--', [StringComparison]::Ordinal)
+    if ($dangling -ge 0) { $stripped = $stripped.Substring(0, $dangling) }
+    return $stripped
+}
+
+function Get-ProvenanceValue {
+    param([string]$Slice, [string]$Field)
+    $line = $Slice -split "`n" | Where-Object { $_ -match "^\s*[-*]?\s*\*\*$Field\*\*:\s*(\S.*)$" } | Select-Object -First 1
+    if ($line -match "\*\*$Field\*\*:\s*(.+)$") { return $matches[1].Trim() }
+    return ''
 }
 
 # --- Gate-batching check (003 FR-008/FR-009: constitution X, Batched gates) ---
