@@ -250,25 +250,63 @@ the decoy hash's 210,000 iterations would be protecting a door with a window nex
 
 ### Implementation
 
-- [ ] T047 Map `GET /api/v1/me` per `contracts/member.md` §1 — member plus profile, every profile field nullable, no internal `Id` in the payload (invariant 8).
-- [ ] T048 Map `PATCH /api/v1/me/preferences` §2 — units, goal, experience, time zone; absent means unchanged; `null` is not accepted for any of the four.
-- [ ] T049 Validate the time zone with `TimeZoneInfo.FindSystemTimeZoneById` and return 422 with a member-legible message when it does not resolve (D10). Never a silent fall back to UTC.
-- [ ] T050 Map `POST /api/v1/me/password` §3 — verify the current password, apply D1 to the new one, revoke **every other** session, keep the presented one (FR-013).
-- [ ] T051 Map `DELETE /api/v1/me` §4 — re-authenticate with the password, then in one transaction soft-delete the member and everything they own and revoke every session including the presented one (FR-014).
-- [ ] T052 Confirm by inspection that no path under `/me` declares a route parameter, query parameter, or body field naming a member (D7). T054 turns this from a habit into a check.
+- [x] T047 Map `GET /api/v1/me` per `contracts/member.md` §1 — member plus profile, every profile field nullable, no internal `Id` in the payload (invariant 8).
+- [x] T048 Map `PATCH /api/v1/me/preferences` §2 — units, goal, experience, time zone; absent means unchanged; `null` is not accepted for any of the four.
+- [x] T049 Validate the time zone with `TimeZoneInfo.FindSystemTimeZoneById` and return 422 with a member-legible message when it does not resolve (D10). Never a silent fall back to UTC.
+- [x] T050 Map `POST /api/v1/me/password` §3 — verify the current password, apply D1 to the new one, revoke **every other** session, keep the presented one (FR-013).
+- [x] T051 Map `DELETE /api/v1/me` §4 — re-authenticate with the password, then in one transaction soft-delete the member and everything they own and revoke every session including the presented one (FR-014).
+- [x] T052 Confirm by inspection that no path under `/me` declares a route parameter, query parameter, or body field naming a member (D7). T054 turns this from a habit into a check.
 
 ### Tests
 
-- [ ] T053 **[D13-3]** `FitForge.Api.Tests` — SC-002: two members; A's session with B's `PublicId` supplied in a body, a query string and a header returns A's data every time. Then remove the scoping and confirm the test **fails** — a test that passes both ways is not evidence.
-- [ ] T054 **[D13-2]** `FitForge.Api.Tests` — enumerate mapped endpoints under `/me` and assert none declares a member-naming parameter. This is the test most likely to be deleted by someone who finds it annoying; that is the argument for it.
-- [ ] T055 **[D13-4]** `FitForge.Api.Tests` — changing `units` leaves every measurement column byte-identical (FR-011, invariant 4, VI-028).
-- [ ] T056 [P] `FitForge.Api.Tests` — password change: the old password stops working, the new one works, other sessions are dead and the presented one survives.
-- [ ] T057 [P] `FitForge.Api.Tests` — a wrong current password refuses the change and leaves the existing password working.
-- [ ] T058 `FitForge.Api.Tests` — after deletion, sign-in returns the same 401 as a wrong password: a deleted account is not discoverable (FR-014).
-- [ ] T059 [P] `FitForge.Api.Tests` — an unresolvable time-zone identifier is a 422, not a silent UTC (spec Edge Cases).
-- [ ] T060 `FitForge.Api.Tests` — two concurrent password changes: one wins, the other is refused, and the account is never left with neither password working.
+- [x] T053 **[D13-3]** `FitForge.Api.Tests` — SC-002: two members; A's session with B's `PublicId` supplied in a body, a query string and a header returns A's data every time. Then remove the scoping and confirm the test **fails** — a test that passes both ways is not evidence.
+- [x] T054 **[D13-2]** `FitForge.Api.Tests` — enumerate mapped endpoints under `/me` and assert none declares a member-naming parameter. This is the test most likely to be deleted by someone who finds it annoying; that is the argument for it.
+- [x] T055 **[D13-4]** `FitForge.Api.Tests` — changing `units` leaves every measurement column byte-identical (FR-011, invariant 4, VI-028).
+- [x] T056 [P] `FitForge.Api.Tests` — password change: the old password stops working, the new one works, other sessions are dead and the presented one survives.
+- [x] T057 [P] `FitForge.Api.Tests` — a wrong current password refuses the change and leaves the existing password working.
+- [x] T058 `FitForge.Api.Tests` — after deletion, sign-in returns the same 401 as a wrong password: a deleted account is not discoverable (FR-014).
+- [x] T059 [P] `FitForge.Api.Tests` — an unresolvable time-zone identifier is a 422, not a silent UTC (spec Edge Cases).
+- [x] T060 `FitForge.Api.Tests` — two concurrent password changes: one wins, the other is refused, and the account is never left with neither password working.
 
-**Gate (human-run)**: as phase 1.
+### SC-002 is met, and it fails when the scoping is removed
+
+The spec required that: *"The test exists and fails when the scoping is removed."* Proven,
+not asserted. `GET /me` was mutated to honour a caller-supplied `memberId` — the exact
+defect invariant 2 calls "of the highest severity" — and the cross-member test failed.
+Reverted; 4 of 4 pass.
+
+**But only 1 of the 4 failed, and that is worth knowing.** T054, the structural test, did
+**not** catch it: the mutation read the identifier from `HttpContext.Request.Query`
+instead of declaring a parameter, and T054 sees declared parameters only. So:
+
+| Test | Proves | Blind to |
+|---|---|---|
+| T054 (structural) | no endpoint under `/me` *declares* a way to name a member | a handler reaching into `HttpContext` directly |
+| T053 (behavioural) | member A never receives member B's data | nothing here — it is the backstop |
+
+Neither is sufficient alone, and the gap between them is now written down rather than
+assumed away. A reviewer reading only T054 would over-trust it.
+
+**D13-4 also mutation-checked**: making a units change convert the stored height — the
+"helpful" refactor invariant 4 exists to forbid — fails T055.
+
+### Three things the tests caught during this phase
+
+| Finding | Where |
+|---|---|
+| `DELETE /api/v1/me` would not start: Minimal APIs do not *infer* a body for DELETE | **the code.** Bound explicitly rather than changing an approved contract; a password in a query string was never an option |
+| T054 flagged `CurrentMember.Member` | **the test.** Correct by its own rule. Excluded by *type*, not by parameter name — the weak fix would have left the check blind to a dangerous type with a different name |
+| T054 then flagged `FitForgeDbContext.Members` | **the test, again.** The rule is now "can the container supply it?", which is exact and stays exact as services are added |
+
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(filled at push)* |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | *(summary)* |
 
 ---
 
