@@ -197,26 +197,47 @@ later, a cost argued in A4 rather than glossed.
 
 ### Implementation
 
-- [ ] T032 Map `POST /api/v1/auth/register` per `contracts/auth.md` §2 — validate with D1, normalize with T004, create `Member` **and** `Profile` in one transaction (`data-model.md`: no read path handles a missing profile), issue a session, return 201.
-- [ ] T033 Handle the duplicate email as 409, and rely on `UQ_Member_NormalizedEmail` to be the actual arbiter — two concurrent registrations of the same address must produce one member and one 409, not two members.
-- [ ] T034 Map `POST /api/v1/auth/sign-in` per `contracts/auth.md` §3 — one message and one status for unknown email, wrong password and soft-deleted member.
-- [ ] T035 Implement the **decoy hash path** (D6): when no member is found, verify the supplied password against the startup decoy so both paths do the same work.
-- [ ] T036 Implement the throttle (D5, `contracts/auth.md` §6) — two 15-minute fixed windows, 10 per normalized email and 30 per source, both answering 429 with `Retry-After`. **Attempts against addresses that do not exist are counted identically**; this is the requirement, not an implementation detail.
-- [ ] T037 Add the source-address salt as a configuration **name** with an empty value in `appsettings.json`, documented in the repository README. No secret enters source (constitution VI).
-- [ ] T038 Map `POST /api/v1/auth/sign-out` — revoke server-side, 204, idempotent (FR-006).
-- [ ] T039 Audit every log statement added in this phase against D12: no password, no token, no hash, no source address, no internal `Id`.
+- [x] T032 Map `POST /api/v1/auth/register` per `contracts/auth.md` §2 — validate with D1, normalize with T004, create `Member` **and** `Profile` in one transaction (`data-model.md`: no read path handles a missing profile), issue a session, return 201.
+- [x] T033 Handle the duplicate email as 409, and rely on `UQ_Member_NormalizedEmail` to be the actual arbiter — two concurrent registrations of the same address must produce one member and one 409, not two members.
+- [x] T034 Map `POST /api/v1/auth/sign-in` per `contracts/auth.md` §3 — one message and one status for unknown email, wrong password and soft-deleted member.
+- [x] T035 Implement the **decoy hash path** (D6): when no member is found, verify the supplied password against the startup decoy so both paths do the same work.
+- [x] T036 Implement the throttle (D5, `contracts/auth.md` §6) — two 15-minute fixed windows, 10 per normalized email and 30 per source, both answering 429 with `Retry-After`. **Attempts against addresses that do not exist are counted identically**; this is the requirement, not an implementation detail.
+- [x] T037 Add the source-address salt as a configuration **name** with an empty value in `appsettings.json`, documented in the repository README. No secret enters source (constitution VI).
+- [x] T038 Map `POST /api/v1/auth/sign-out` — revoke server-side, 204, idempotent (FR-006).
+- [x] T039 Audit every log statement added in this phase against D12: no password, no token, no hash, no source address, no internal `Id`. **Result: this phase adds no log statement at all.** Recorded as a finding rather than a tick — "nothing to audit" is the honest outcome, and it also means the audit trail a failed sign-in ought to leave (D12 allows the normalized email and the outcome) does not exist yet. Noted for phase 10 rather than added here: logging is not in this phase's task list, and adding it unasked is the scope creep the ritual exists to prevent.
 
 ### Tests
 
-- [ ] T040 `FitForge.Api.Tests` — register, then sign in, then resolve the session. The whole of US1 in one test.
-- [ ] T041 [P] `FitForge.Api.Tests` — unknown email and wrong password return byte-identical bodies and the same status (FR-004).
-- [ ] T042 `FitForge.Api.Tests` — the decoy path **calls the hasher**. Asserted through a counting hasher, not through wall-clock timing: a timing assertion in CI is a flaky test, not a security control (D6).
-- [ ] T043 [P] `FitForge.Api.Tests` — registering an email differing only in case, or by surrounding whitespace, is refused as a duplicate (FR-001, spec Edge Cases).
-- [ ] T044 `FitForge.Api.Tests` — the throttle fires on the 11th failure for an email **that does not exist**, and answers 429 exactly as it does for one that does (D5). This is the oracle test; without it the feature's headline defence is untested.
-- [ ] T045 `FitForge.Api.Tests` — a successful sign-in clears the email bucket and leaves the source bucket intact.
-- [ ] T046 `FitForge.Api.Tests` — sign-out revokes server-side: the token fails on the next resolve, and a second sign-out with the same token is still 204.
+- [x] T040 `FitForge.Api.Tests` — register, then sign in, then resolve the session. The whole of US1 in one test.
+- [x] T041 [P] `FitForge.Api.Tests` — unknown email and wrong password return byte-identical bodies and the same status (FR-004).
+- [x] T042 `FitForge.Api.Tests` — the decoy path **calls the hasher**. Asserted through a counting hasher, not through wall-clock timing: a timing assertion in CI is a flaky test, not a security control (D6).
+- [x] T043 [P] `FitForge.Api.Tests` — registering an email differing only in case, or by surrounding whitespace, is refused as a duplicate (FR-001, spec Edge Cases).
+- [x] T044 `FitForge.Api.Tests` — the throttle fires on the 11th failure for an email **that does not exist**, and answers 429 exactly as it does for one that does (D5). This is the oracle test; without it the feature's headline defence is untested.
+- [x] T045 `FitForge.Api.Tests` — a successful sign-in clears the email bucket and leaves the source bucket intact.
+- [x] T046 `FitForge.Api.Tests` — sign-out revokes server-side: the token fails on the next resolve, and a second sign-out with the same token is still 204.
 
-**Gate (human-run)**: as phase 1.
+### What the tests caught that review would not have
+
+| Finding | Where it was |
+|---|---|
+| Validation returned **400**, not the 422 `contracts/auth.md` §2 fixes | **the code.** `Results.ValidationProblem` defaults to 400, which is quietly plausible; the BFF branches on the status |
+| Two failure bodies are not byte-identical | **the test.** `traceId` is per-request. Excluding that one named field is not a weakening — a correlation id random in both cases carries no information about which occurred |
+| A second validated option changed the startup exception's shape | **the test.** Two failing options raise an `AggregateException`, not a bare `OptionsValidationException`. The host names **both** settings, which is better than before, so the test now asserts on flattened text and a new test pins the both-at-once behaviour |
+
+**Mutation-checked.** Removing `RecordFailureAsync` from the no-such-member path — so the
+throttle counts only real accounts — fails 2 of 15. That mutation *is* the existence
+oracle: 429-versus-401 would become the answer to "does this address have a member?", and
+the decoy hash's 210,000 iterations would be protecting a door with a window next to it.
+
+**Gate (human-run) — critical-delivery item 3, audit evidence**
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(filled at push)* |
+| `scope-check-repos` | *(verdict)* |
+| `git diff --stat` | *(summary)* |
 
 ---
 
