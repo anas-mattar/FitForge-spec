@@ -45,7 +45,13 @@ Machine assist: `pwsh -File scripts/init-kit.ps1` does the mechanical part of st
 instantiates the selected tier rulebooks, wires the Task-Scoped Reading rows, fills
 `{{PROJECT_NAME}}` and the repository slots, and writes **kit-adoption.json** (the durable
 record of your name/topology/tier choices — the adoption doctor's source of truth,
-owner-editable if tiers change later) — then prints the judgment slots that remain yours
+owner-editable if tiers change later). **Two or more developers? Pass
+`-Developers ada,grace` now** — a comma-separated list, which the initializer splits, so it
+works under `pwsh -File` where PowerShell would otherwise hand the whole string over as one
+name. Or hand-edit the record later: that array decides whether a **Critical** feature owes an
+independent human review or the solo substitute (`docs/sdlc/critical-delivery.md` item 5). Left
+undeclared it stays solo, which is the stricter arm — so declaring nothing is safe, and
+declaring a team you do not have is not. Then it prints the judgment slots that remain yours
 and finishes by running `scripts/verify-kit.ps1`, whose red verdict at that moment is your
 remaining to-do list, not a failure. It never writes rulebook content or ratifies the
 constitution.
@@ -151,6 +157,10 @@ From the first week:
   repository, filling its two slots. Skip this and the scope check governs only the
   governance repository, leaving every code phase commit's territory reviewer-verified prose
   (`docs/sdlc/repository-strategy.md`, "Territory across repositories").
+- **Check the `developers` array is right** (step 1 writes it). It decides which independence
+  evidence a **Critical** feature owes. What the team check proves is bounded — two names in
+  one file, written by the same team; it makes an omission falsifiable, it does not verify the
+  review happened. See **adoption/updating.md** for the full table.
 - **CI gate as second witness**: run the gate on every push. The owner-held certifying
   gate (user-run — or plan-declared `ci-held`, where the CI run itself becomes the
   approved evidence; `docs/sdlc/gate-command.md`) remains the trust ritual; CI catches

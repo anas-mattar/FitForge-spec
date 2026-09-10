@@ -31,5 +31,9 @@
   "codeRepos": [
     "fitforge-api",
     "fitforge-web"
+  ],
+  "developers": [
+    "anas.m",
+    "ahmad"
   ]
 }
