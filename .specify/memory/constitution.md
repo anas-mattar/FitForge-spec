@@ -1,7 +1,8 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: kit template 0.6.0 -> FitForge 1.0.0 (first ratification)
+Version change: kit template 0.6.0 -> FitForge 1.0.0 (first ratification) -> 1.1.0
+(2026-09-10: Principle I gains the Amendment authority clause)
 Bump rationale: MAJOR — initial ratification. This is FitForge's constitution, adopted
   from the Agentic SDLC Kit at kit version 0.6.0 (kit commit 2f187c9, which includes
   feature 012's cross-repository scope-check reach — the reason FitForge could be adopted
@@ -74,6 +75,32 @@ unchanged. Absent a Micro declaration, the full workflow above applies.
 change to an approved requirement. The Micro arm keeps all of that — intent is still written
 and approved before implementation — while dropping only the planning ceremony that adds
 nothing to a change small enough to fit the lane's machine-policed bounds.
+
+**Amendment authority**: once a feature's `spec.md` or `plan.md` has been approved, any
+later change to that feature's `spec.md`, `plan.md`, `tasks.md` or `contracts/` — a new
+package, a changed value, an added phase, a widened Territory, a reinterpreted contract
+clause — MUST record who approved it. The amended section carries an
+`**Amendment approved by**: <name>, <YYYY-MM-DD>` line, and the amendment commit names the
+same approver. **An implementing agent MUST NOT approve its own amendment.** Amending
+before implementing satisfies the sequence; it does not satisfy this rule.
+
+**Rationale**: added 2026-09-10 after the AI review of feature 001 (governance F3) found
+that every amendment following that feature's single owner approval had been written by
+the implementing session and implemented against minutes later — twenty-nine seconds, in
+one case — with no approver anywhere. No machine check caught it, because
+`scope-check`, `scope-check-repos`, `enforcement-pack` and `doc-lint` grade paths, tokens
+and dates, and none of them grades authority. Every one of those amendments happened to be
+correct, which is exactly why the mechanism would have survived one that was not. Getting
+the order right — amend, then implement — is a check on retroactivity, not a check on
+consent, and the two had been quietly conflated.
+
+**Enforcement, honestly stated**: this clause is enforced by review, not by machine. The
+natural home for the check is `scripts/enforcement-pack.ps1`, which `kit-manifest.json`
+classes `verbatim` — a rule added to it here would be reverted by the next kit update,
+leaving a constitutional requirement whose check had quietly disappeared. That is worse
+than no check, because nobody would notice. The machine check is therefore owed to the kit
+as its own feature; until it exists, the AI review and the human reviewer are what stands
+between this rule and the habit it was written to break.
 
 ### II. Source of Truth Hierarchy
 
@@ -255,4 +282,4 @@ evaluated before Phase 0 research and re-evaluated after Phase 1 design. Any vio
 justified in the plan's Complexity Tracking section or the work MUST stop and be reported. Use
 `CLAUDE.md` and the `docs/` guidance files for runtime development guidance.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-09
+**Version**: 1.1.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-10
