@@ -1463,6 +1463,55 @@ Capping it needs §6 amended to count register attempts regardless of outcome �
 decision, not an agent's**, and one with a real cost: thirty registrations from one office
 in fifteen minutes would then throttle the thirty-first. Recorded here rather than taken.
 
+**Gate (human-run)**: one per code repository. Critical forbids batching, so both are run
+and confirmed separately (`docs/sdlc/critical-delivery.md` item 4).
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | **0**, run by anas.m, 2026-09-12 — `total: 144, failed: 0, succeeded: 144`; `Build succeeded in 142.5s` |
+| Commit gated | `4cf4549` |
+| `scope-check-repos` | `PASS phase 13 commit 4cf4549 (12 file(s))` |
+| `git diff --stat` | 12 files changed, 1318 insertions(+), 89 deletions(-) |
+
+| | |
+|---|---|
+| Command | `npm run lint && npm run build && npm run typecheck && npm test` in `fitforge-web` |
+| **Exit code** | **0**, run by anas.m, 2026-09-12 — `Test Files 10 passed (10)`, `Tests 86 passed (86)` |
+| Commit gated | `121453b` |
+| `scope-check-repos` | `PASS phase 13 commit 121453b (11 file(s))` |
+| `git diff --stat` | 11 files changed, 266 insertions(+), 12 deletions(-) |
+
+The governance commit `32f0c4b` is covered by the branch-level `ritual-checks` run recorded
+below, not by a gate of its own.
+
+**Branch checks after this phase** — `pwsh -File scripts/ritual-checks.ps1`, exit **1**,
+**6 of 7 members green, `CriticalEvidence` the sole failure**. Unchanged in kind from phases
+10 and 12: `human-pr-review.md` cannot exist until T100 (GAP-022). What this run adds is the
+first grading of real code since the remediation began —
+
+| Member | Result |
+|---|---|
+| `doc-lint` | OK — 42 docs, every referenced path resolves |
+| `enforcement-pack` | **FAIL** — `CriticalEvidence` only. Two non-blocking `PhaseSizeWarning`s on `ae00e4e` and `d067570`, both planning-stage commits; this phase's governance commit triggered neither |
+| `scope-check` | OK — `PASS phase 13 commit 32f0c4b (2 file(s))` |
+| `scope-repos` | OK — **`PASS phase 13` in both code repositories, 23 files of real code graded against the Territory declared in this file** |
+| `digests` | OK — 5 fresh, 73 markers |
+| `roadmap-claims` | OK |
+| `verify-kit` | OK — 2 developers declared, so the team evidence rule applies |
+
+The `WARN commit bd6c737` line is the historical phase-11 warning explained above, unchanged
+by this phase.
+
+### One record corrected
+
+`fitforge-web` commit `121453b`'s message says *"96 tests pass locally"*. The suite has
+**86**, and had 86 when that line was written; the number was miscopied, not measured. It is
+corrected here rather than by rewriting a pushed commit — the same treatment phase 12 gave
+the five false task records, and for the same reason: the fix for an untrue record is a true
+one beside it, not a quieter version of the original. Nothing else in that message is
+affected, and the gate above is the count that governs.
+
 ## Phase 14: The contracts (US1, US2, US3)
 
 **Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
