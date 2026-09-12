@@ -679,11 +679,149 @@ declared". Phase 10 is the documented exception, because it is the only phase wi
 other path to name, and a `**Territory**` marker with an empty list is the one shape
 `scripts/scope-check.ps1` rejects outright (amendment A5, approved by anas.m 2026-09-12).
 
-- [ ] T098 Complete the Gate blocks above: the command, its exit code, the `scope-check` and `scope-check-repos` verdicts, and `git diff --stat`, for all nine code phases (critical-delivery item 3).
-- [ ] T099 File the AI review as `ai-code-review.md` with the Reviewer Provenance block, **including the item-by-item pass over all ten training invariants** (critical-delivery item 2, SC-006). `data-model.md`'s invariant trace is the starting point, not the answer.
+- [x] T098 Complete the Gate blocks above: the command, its exit code, the `scope-check` and `scope-check-repos` verdicts, and `git diff --stat`, for all nine code phases (critical-delivery item 3).
+- [x] T099 File the AI review as `ai-code-review.md` with the Reviewer Provenance block, **including the item-by-item pass over all ten training invariants** (critical-delivery item 2, SC-006). `data-model.md`'s invariant trace is the starting point, not the answer.
 - [ ] T100 File Ahmad's `human-pr-review.md` with the `## Review Provenance` block, including its own item-by-item invariant pass (SC-006).
-- [ ] T101 Record SC-001 through SC-007 with what settled each: which test, which inspection, which gate. SC-004 is a search of both repositories for a plaintext or reversibly-encoded password, and the search command belongs in the record.
-- [ ] T102 Confirm the merge precondition of `plan.md` §6 — FitForge declares `"developers": ["anas.m", "ahmad"]` in `kit-adoption.json`, so the Critical evidence check reads this project as a team and Ahmad's review is the evidence. Blocked on kit feature 013 flowing down; this feature is that feature's SC-001.
+- [x] T101 Record SC-001 through SC-007 with what settled each: which test, which inspection, which gate. SC-004 is a search of both repositories for a plaintext or reversibly-encoded password, and the search command belongs in the record.
+- [x] T102 Confirm the merge precondition of `plan.md` §6 — FitForge declares `"developers": ["anas.m", "ahmad"]` in `kit-adoption.json`, so the Critical evidence check reads this project as a team and Ahmad's review is the evidence. Blocked on kit feature 013 flowing down; this feature is that feature's SC-001.
+
+### T101 — the success criteria, and what settled each
+
+One row per criterion. "Settled by" names something a reader can open. Where nothing
+settles a criterion, the row says so rather than borrowing evidence from a neighbour.
+
+| | Settled by | Status |
+|---|---|---|
+| **SC-001** — one screen, one submission, for a new and for a returning member | Both halves of the segmented control render the same card (T074, T075) and `SignInCard.tsx:64` navigates to `/` on success, where the `(app)` layout admits the session (T082). Register and sign-in are one BFF route each (T072); neither routes away | **Held by inspection, not by a test** — the residual is below |
+| **SC-002** — a test proves A cannot read or write B, and fails when the scoping is removed | `MemberScopingTests.cs`: T053 behavioural, T054 structural. The mutation was performed and reverted; "SC-002 is met, and it fails when the scoping is removed" above records it, including which of the four tests did **not** catch it | Met, and its blind spot is documented |
+| **SC-003** — nothing script-readable authenticates, and the browser never reaches the API origin | T081's inspection table above, against a real signed-in session on LocalDB. The half that cannot be faked: sign-out revoked 1 of 3 sessions, so the BFF read a cookie the script could not see | Met **on the day it was inspected, and by nothing since** — `ai-code-review.md` F10 found that `src/lib/session.ts` has no test of any kind, so `httpOnly` could be flipped tomorrow and every gate would still exit 0. SC-003 asks for an inspection and got a good one; it has no standing witness |
+| **SC-004** — no plaintext or reversibly-encoded password in either repository | The search below | Met, with one class of finding explained rather than waved away |
+| **SC-005** — the deviation table is empty at merge, except the three declared | ~~Phase 7's and phase 9's loop results~~ — **this row was wrong when first written, and the AI review corrected it.** `PreferencesCard.tsx:113-117` ships a "Height:" row that appears in neither reference screenshot nor VI-019/VI-020: a **fourth** deviation, undeclared, and an addition rather than an omission (`ai-code-review.md` F14) | **NOT met** |
+| **SC-006** — both reviews carry an item-by-item pass over all ten training invariants | Nothing yet: T099 and T100 are those reviews, and neither is filed | **Open** |
+| **SC-007** — every phase's gate run by a human, exit code recorded here | Every Gate block — phases 1 through 9 and 11, phase 1 carrying two because it spans both repositories — records a human-run exit code of **0** against a named commit, with the `scope-check-repos` verdict and `git diff --stat` beside it. Phase 9 closed last, on 2026-09-12 | Met |
+
+#### SC-004 — the search, and what it found
+
+Three passes, run once per repository. Per repository because the governance repo does not
+descend into the nested code repositories — each is its own git repository and the parent
+ignores it, so a single search from the root silently covers one of three:
+
+```text
+rg -i -n "(password|pwd|passwd)[A-Za-z]*\s*(=|:|,|\()\s*[\"'`][^\"'`]{4,}[\"'`]"
+rg -i -n "(base64|FromBase64|ToBase64|Encrypt|Decrypt|Convert\.To|atob|btoa)"
+rg -i -n "(_logger|ILogger|Log\.|Console\.Write|console\.(log|error|warn|info))"
+```
+
+| Repository | Password-shaped literals | Reversible encoding | Log statements |
+|---|---|---|---|
+| `fitforge` (governance) | none | none | n/a — no code |
+| `fitforge-api` | 13, **all under `tests/`** | 6, none of a password | 4 |
+| `fitforge-web` | none | none | 1 |
+
+**The 13 are test fixtures, and here is why that is not a dodge.** Eleven are the same
+synthetic passphrase fed *into* the code under test — a hasher test that cannot supply a
+plaintext cannot test a hasher. The other two are `PasswordHash = "not-used-here"`, a
+placeholder occupying a non-null column in tests that never verify against it. None is any
+person's credential, none is written by product code, and none reaches a log.
+
+**The 6 encodings, checked one at a time rather than counted.** Five are in
+`SessionService.cs` — base64url of 32 bytes from `RandomNumberGenerator`, which is how the
+session token is *minted*, not how anything is recovered. The sixth,
+`MemberPasswordHasher.cs:67`, is base64 of 32 random bytes used as the decoy hash's input,
+and its own comment says why that value must stay unguessable. The stored value is
+`PasswordHasher<TUser>` v3 — PBKDF2-HMAC-SHA512, 210,000 iterations, 128-bit salt — from
+which no plaintext is recoverable.
+
+**The log surface, searched because a password leaks there as easily as into a column.**
+Five log statements exist in total: `RetentionService.cs:69`, `RetentionRunner.cs:90`,
+`DomainExceptionHandler.cs:36`, `BearerSessionHandler`'s injected factory, and
+`fitforge-web/src/app/api/health/route.ts:31`. The only one carrying data carries counts,
+and says so in its own comment. Not one takes a password, a token, an email or an
+identifier.
+
+#### The SC-001 residual, stated for the human review
+
+`router.push("/")` at `SignInCard.tsx:64` is what makes SC-001 true, and **no test asserts
+it**. Searching both suites for an assertion on that navigation returns nothing. What
+exists is the code, read; and the SC-003 inspection, which drove sign-in by `fetch` and so
+never exercised the submit path that calls it. A regression removing that line would leave
+every test green and SC-001 false.
+
+Recorded rather than fixed, because adding a test here is phase 9's work arriving in phase
+10 after phase 9 was gated — the scope creep the ritual exists to prevent. It belongs in
+Ahmad's review as a decision: accept the residual, or take a phase 12 for it.
+
+### T102 — the merge precondition holds
+
+`plan.md` §6 makes the merge conditional on the Critical evidence check reading FitForge as
+a **team**. Confirmed in the two places that has to be true:
+
+- `kit-adoption.json` declares `"developers": ["anas.m", "ahmad"]` — two names, so the team
+  arm is selected. Absence would have selected solo, the stricter branch, and demanded the
+  second-model substitute plus its cooling-off.
+- `scripts/enforcement-pack.ps1` carries `Invoke-CriticalTeamEvidence`, so kit feature 013
+  has flowed down and that arm exists here. **This feature is 013's SC-001**; the
+  precondition is met rather than pending.
+
+What the team arm will demand of T100's file, so Ahmad fills it once rather than twice:
+`human-pr-review.md`, **committed** — it is read from the `HEAD` blob, never the working
+tree — carrying a visible `## Review Provenance` section, not wrapped in an HTML comment,
+with a filled `**Reviewer**:`, a filled `**Owner**:` that differs from it, and this
+sentence verbatim: *This reviewer is not the owner of the feature under review.*
+
+One limit of the check, worth knowing rather than discovering: the roster is **counted,
+never matched**. A review naming two people absent from `kit-adoption.json` passes. What
+the machine enforces is reviewer ≠ owner; the rest is the human's word.
+
+### What phase 10 still owes
+
+T098 closed on 2026-09-12: anas.m ran phase 9's gate in `fitforge-web` against `a3ca4b9`
+and it exited **0**, which was the last *(pending)* cell in this file and with it SC-007.
+
+T099 closed on 2026-09-12: `ai-code-review.md` is filed, produced by **three independent
+fresh-context agent sessions** — domain invariants, API identity security, web BFF and
+contracts — none of which shared context with the session that wrote the code. Its verdict
+is **REQUEST CHANGES: 14 blocking findings**.
+
+**T100 is deliberately not staged.** Ahmad reviews after the blocking findings are
+resolved, not before; a human review filed against a diff that is about to change is a
+signature on the wrong document. SC-006 needs an item-by-item invariant pass in **both**
+reviews, and only one exists.
+
+### What the review changed in this file, and why that matters
+
+Two rows of the T101 table above were **wrong when written**, and the review caught them:
+
+- SC-005 was recorded Met. A fourth, undeclared visual deviation ships (F14).
+- SC-003 was recorded Met without noting that nothing tests it (F10).
+
+Both errors have the same shape: they were derived from this file's own phase notes rather
+than from the code. That is precisely the failure the review exists to catch, and it lands
+on the governance phase as readily as on an implementation one. The rows are corrected
+above rather than quietly rewritten — the strike-through is the evidence.
+
+The review's own F11 is the same failure at scale: **five tasks are marked `[x]` against
+tests that grade a different module or do not exist** (T077, T078, T084, T085, T096). Every
+gate in this feature was run by a human and exited 0, honestly, over a suite that does not
+assert what this file says it asserts. Correcting those five records is remediation work
+that must happen whether or not the missing tests are written now.
+
+One finding is the owner's alone: **F8-GOV**. `Session` and `SignInAttempt` were exempted
+from invariant 8 by a deviation argued against `database-rules.md` — a rulebook, a lower
+rung — while `training-invariants.md` has never been amended. Either the columns go in, or
+the invariant is amended to name the exception with a recorded approver (constitution
+1.1.0). A plan cannot waive a rule of constitutional force, and no agent should close it.
+
+**One number an auditor will query, resolved here so nobody chases it.** Phase 7's block
+records `git diff --stat` as 20 files changed while its `scope-check-repos` verdict counts
+21 — the only Gate block in this file whose two numbers disagree. Both are right. Commit
+`ea76672` moves `src/app/page.tsx` to `src/app/(app)/page.tsx`. `git show --stat` prints a
+rename as one entry; `Get-CommitPaths` in `scripts/scope-lib.ps1` counts **both sides on
+purpose** — its own comment says "renames contribute both sides" — because a rename out of
+territory and a rename into it are different questions, and a check that saw only the
+destination would let a file be moved out of its phase's territory unnoticed. So 20 and 21
+are the same commit, counted for two different purposes. Neither record is edited: they are
+gated audit evidence, and this paragraph is the reconciliation.
 
 **Gate (human-run)**: `pwsh -File scripts/ritual-checks.ps1` on the governance repository.
 
