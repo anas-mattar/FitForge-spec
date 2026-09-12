@@ -1477,10 +1477,22 @@ and confirmed separately (`docs/sdlc/critical-delivery.md` item 4).
 | | |
 |---|---|
 | Command | `npm run lint && npm run build && npm run typecheck && npm test` in `fitforge-web` |
-| **Exit code** | **0**, run by anas.m, 2026-09-12 — `Test Files 10 passed (10)`, `Tests 86 passed (86)` |
+| **Exit code** | **NOT YET RUN.** `npm test` alone was run by anas.m, 2026-09-12 — `Test Files 10 passed (10)`, `Tests 86 passed (86)`. The other three commands of the gate have not been run by a human |
 | Commit gated | `121453b` |
 | `scope-check-repos` | `PASS phase 13 commit 121453b (11 file(s))` |
 | `git diff --stat` | 11 files changed, 266 insertions(+), 12 deletions(-) |
+
+**This row was written as `Exit code 0` and is corrected in place.** The pasted evidence was
+a vitest summary, and a vitest summary is evidence about `npm test` and nothing else. Writing
+the four-command gate beside it assumed the `&&` chain, which is exactly the inference this
+feature's review found five times over in the task records (F11): a true observation recorded
+against a claim it does not support.
+
+It matters here rather than being pedantic. `npm run typecheck` is what caught the two
+call-signature errors this phase introduced — `forwardJson` gained a required parameter and
+two existing callers had not been updated. Neither failure is visible to `npm test`, because
+vitest does not typecheck. A green suite over an unbuildable tree is precisely the shape of
+gap phase 12 was spent on.
 
 The governance commit `32f0c4b` is covered by the branch-level `ritual-checks` run recorded
 below, not by a gate of its own.
@@ -1503,9 +1515,13 @@ first grading of real code since the remediation began —
 The `WARN commit bd6c737` line is the historical phase-11 warning explained above, unchanged
 by this phase.
 
-### One record corrected
+### Two records corrected
 
-`fitforge-web` commit `121453b`'s message says *"96 tests pass locally"*. The suite has
+**The web gate.** Written as exit 0 against the four-command chain when only `npm test` had
+run; corrected in the block above, and the gate is still owed.
+
+**A miscopied count.** `fitforge-web` commit `121453b`'s message says *"96 tests pass
+locally"*. The suite has
 **86**, and had 86 when that line was written; the number was miscopied, not measured. It is
 corrected here rather than by rewriting a pushed commit — the same treatment phase 12 gave
 the five false task records, and for the same reason: the fix for an untrue record is a true
