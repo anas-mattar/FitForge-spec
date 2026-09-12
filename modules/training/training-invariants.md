@@ -88,6 +88,31 @@ appear in URLs, API payloads, or logs.
 **Rationale**: the audit trail is what makes an additive correction (§1) meaningful, and
 exposing sequential internal keys hands out an enumeration oracle over members' data.
 
+**Exemption — infrastructure rows.** An entity that is **neither externally addressable nor a
+member-facing record** — an authentication session, a rate-limit counter — is exempt from
+`PublicId` and from the `by whom` audit fields. It MUST still carry its creation instant.
+
+Two conditions, and the exemption is void without both:
+
+1. The entity MUST state its exemption, and the reason, in `data-model.md`. An exemption
+   nobody wrote down is not an exemption.
+2. The reason MUST be that the entity is unaddressable and member-invisible — never that the
+   columns are inconvenient. If anything outside the API ever needs to name the row, it is
+   addressable and the exemption lapses.
+
+**Why this is narrower than it looks.** A session's external identifier already *is* its
+token; a `PublicId` would mint a second addressable handle to an authentication artifact —
+one more thing to leak, log or enumerate — that no query would read. A failed sign-in counter
+cannot honestly record `by whom`: who it was is precisely what is unknown at that moment.
+Neither argument reaches a record a member can see, which is every entity this invariant was
+written for.
+
+**Amendment approved by**: anas.m, 2026-09-12 (constitution 1.1.0, amendment authority).
+Raised by feature 002's AI review, finding F8-GOV: `Session` and `SignInAttempt` shipped
+without these fields under a deviation argued against `database-rules.md` — a rulebook, a
+lower rung — which cannot waive a rule of constitutional force. The engineering judgement was
+sound; the instrument was wrong. This is the instrument.
+
 ## 9. One authoritative state per member
 
 A member MUST NOT have two `active` `WorkoutSession` rows, nor two `active` `Program` rows, at

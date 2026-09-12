@@ -102,11 +102,21 @@ exposed, never listed, and has no member-facing identity.
 | `RevokedAtUtc` | `DATETIME2(3) NULL` | non-null means dead, whatever `ExpiresAtUtc` says |
 | `LastSeenAtUtc` | `DATETIME2(3) NOT NULL` | written at most hourly |
 
-**Three deliberate deviations from `database-rules.md`, approved in `plan.md` D3**:
+**Exempt from invariant 8 under its infrastructure-rows exemption** (`modules/training/training-invariants.md` §8,
+amendment approved by anas.m 2026-09-12). `Session` is **neither externally addressable nor a
+member-facing record**: nothing outside the API can name a session row, and no member ever
+sees one. It carries its creation instant, as the exemption requires.
 
-1. **No `PublicId`.** The rulebook requires one on every *business entity*. A session has no
-   external identity — the token is the only handle, and minting a second identifier for a
-   secret-bearing row would create a way to name a session that no contract needs.
+This statement is condition 1 of that exemption and is what makes it valid — an exemption
+nobody wrote down is not an exemption. It replaces the framing this document carried until
+2026-09-12, which argued these omissions against `database-rules.md` alone. That was the
+wrong instrument: a rulebook is a lower rung and cannot waive a rule of constitutional
+force, and feature 002's AI review (F8-GOV) was right to reject it. The engineering
+reasoning below is unchanged, because it was never the part that was wrong.
+
+1. **No `PublicId`.** A session has no external identity — the token is the only handle, and
+   minting a second identifier for a secret-bearing row would create a way to name a session
+   that no contract needs.
 2. **No `CreatedBy` / `UpdatedBy`.** `MemberId` is the actor, and a session is written only
    by the authentication paths.
 3. **No soft delete.** `RevokedAtUtc` is the tombstone, and dead rows are physically removed
@@ -135,6 +145,18 @@ than the window are removed by the retention service.
 | `NormalizedEmail` | `NVARCHAR(254) NOT NULL` | `IX_SignInAttempt_Email_At` |
 | `SourceHash` | `BINARY(32) NOT NULL` | SHA-256 of the source address plus a server salt |
 | `AttemptedAtUtc` | `DATETIME2(3) NOT NULL` | |
+
+**Exempt from invariant 8 under its infrastructure-rows exemption** (`modules/training/training-invariants.md` §8,
+amendment approved by anas.m 2026-09-12). `SignInAttempt` is a **rate-limit counter, not a
+record**: nothing outside the API can name a row, no member ever sees one, and it is named in
+the exemption's own text. It carries `AttemptedAtUtc` as its creation instant, which the
+exemption still requires.
+
+`CreatedBy` is the sharper half of why. Most rows here are written by **failed,
+unauthenticated** attempts — "by whom" is exactly what is unknown at the moment of writing,
+so the column could only ever hold a guess or a placeholder. A `PublicId` would add a GUID
+and a unique index to the highest-churn table in the schema for an identifier no query reads.
+This statement is condition 1 of the exemption and is what makes it valid.
 
 Rows are written for emails that **do not exist**, identically to ones that do. That is the
 whole point: if the throttle only counted real accounts, 429-versus-401 would be the
@@ -168,7 +190,7 @@ purely additive — nothing is dropped, rewritten, or backfilled — so both dow
 | 5 — derived numbers not stored | Nothing derived is stored; `memberSince` is `CreatedAtUtc`, read directly |
 | 6 — a set is physically possible | **Not applicable** — no `SetEntry` |
 | 7 — rules live in the API | Every constraint above is in the API's schema; the BFF has no database connection |
-| 8 — audit and identity | Audit fields on both business entities; `PublicId` is the only identifier on the wire |
+| 8 — audit and identity | `Member` and `Profile` carry the full audit fields and PK standard; `PublicId` is the only identifier on the wire. `Session` and `SignInAttempt` are **exempt**, declared above under §8's infrastructure-rows exemption (approved 2026-09-12) — not, as this row claimed until then, satisfied. `CreatedBy` currently writes `"self"` on registration where the contract defines a `PublicId` or `system`; that is review finding N2 and is open |
 | 9 — one authoritative state | **Not applicable** — no `WorkoutSession` or `Program` |
 | 10 — minimal and deletable | No health data beyond height and birth year; soft delete then physical removal at 30 days; the source address is hashed, not stored |
 

@@ -1119,3 +1119,204 @@ The run needs Docker or LocalDB available. LocalDB was used here.
 
 **Phase 11 is complete**, and phase 3 is closed with it — T105–T107 are the tests phase 3
 was missing.
+
+**One commit of this phase was never graded, and it is worth knowing why.** CI reports
+`scope-check: WARN commit bd6c737: no territory declared for phase 11`. The declaration
+above is not at fault — it parses. `bd6c737` is the **A4 amendment commit that created
+phase 11**, and its subject carries the token `phase 11`, so the check attributed it to a
+phase whose Territory did not yet exist *in its parent*, and warned instead of grading. The
+rule to carry forward: **a commit that declares a phase must not carry that phase's token
+in its subject**, or it grades itself against a declaration that does not exist yet. A5's
+commit avoided this by naming no phase.
+
+---
+
+## Remediation amendment request (awaiting an approver)
+
+### A6 — how the 14 blocking findings get fixed, and the one decision they wait on
+
+`ai-code-review.md` returned **REQUEST CHANGES**. Remediation needs phases, phases need
+Territory, and Territory must be committed before the phase commit that uses it
+(`scope-check.ps1:194` — the lesson of A5, and of `bd6c737` above). So the shape is proposed
+here, once, rather than five times over.
+
+#### Part 1 — the F8-GOV decision (invariant 8 vs `Session` and `SignInAttempt`)
+
+**Recommended: amend `modules/training/training-invariants.md`, narrowly — do not add the
+columns.**
+
+The reviewer's own judgement was that the engineering argument in `Session.cs:12-22` is
+sound and the *instrument* was wrong. Both halves look right to me:
+
+- A session's external identifier **is its token**. Giving it a `PublicId` mints a second
+  addressable handle to an authentication artifact — one more thing to leak, log or
+  enumerate — and buys nothing. Invariant 8 exists to give traceable identity to records
+  people refer to; nobody refers to a session row.
+- `SignInAttempt` is a counter, not a record. Its own type comment says so, retention prunes
+  it, and `CreatedBy` on a row written by a **failed, unauthenticated** attempt has no
+  honest value — "by whom" is exactly what is unknown at that moment.
+- Complying costs a migration on two tables plus a GUID and a unique index on the
+  highest-churn table in the schema, to populate columns no query will read.
+
+**What the amendment must contain, so it closes the hole instead of widening it**: a named
+exemption for entities that are neither externally addressable nor member-facing records —
+authentication sessions and rate-limit counters — **and** a requirement that each exempt
+entity states its exemption in `data-model.md`. Without that second half this becomes the
+escape hatch F8-GOV warned about.
+
+**This one is the owner's alone.** It changes a document of constitutional force, it needs a
+recorded approver under constitution 1.1.0, and the implementing agent may not approve it.
+If it is refused, phase 14 below gains a migration and its estimate changes.
+
+#### Part 2 — five remediation phases
+
+Ordered so the record stops being false before anything is built on it.
+
+**Phase 12 — the record.** Territory: `specs/002-identity-member-profile/**`. Closes **F11**:
+correct the five task records marked `[x]` against tests that grade a different module or do
+not exist (T077, T078, T084, T085, T096). No code. First, because every later phase is
+graded against this file and it currently overstates what nine phases delivered.
+
+**Phase 13 — the throttle.** Territory: `fitforge-api/src/**`, `fitforge-api/tests/**`,
+`fitforge-web/src/**`. Closes **F1** (both halves — the BFF forwards the address, the API
+validates it against known proxies), **F2** (serialize check-and-record), **F3** (throttle
+register), **F6** (throttle the `/me` re-authentications) and **N1** (`Retry-After` reads
+the wrong row). First code phase, because F1 is the one defect that takes the product down
+for every member at once.
+
+**Phase 14 — the contracts.** Territory: `fitforge-api/src/**`, `fitforge-api/tests/**`.
+Closes **F4** (sign-out idempotence), **F5** (`/problems/no-session`) and **F7** (emit a UTC
+offset, and assert the wire shape). Each is a divergence from a document approved under
+constitution VII *before* implementation, so each is fixed in the code rather than by
+editing the contract — unless the owner rules otherwise, per finding.
+
+**Phase 15 — the web perimeter and its missing tests.** Territory: `fitforge-web/src/**`.
+Closes **F12** (compare the whole origin, scheme included), **F13** (refuse Origin-less
+mutating requests), **F10** (the cookie's five attributes get the test T078 claimed) and the
+untested BFF route handlers named in the review's coverage section.
+
+**Phase 16 — the UI.** Territory: `fitforge-web/src/**`. Closes **F9** (there is no way to
+sign out) and **F14** (the undeclared "Height:" row). F9 needs a second owner decision: the
+reference screenshots have no sign-out control either, so either the design gains one or
+`spec.md`'s US1 acceptance scenario 5 is amended.
+
+Each phase's task list is written when that phase is claimed, not now. What this request
+settles is the **Territory**, which has to exist before the phase commit — and, per
+`bd6c737` above, the commit that applies this amendment will carry **no phase token**.
+
+#### Not in remediation
+
+The 25 non-blocking findings, except N1, which rides along with the throttle. They are
+recorded in `ai-code-review.md` and belong to whoever next opens those files. Folding them
+in would turn five phases into ten and blur what "the blocking findings are fixed" means.
+
+**Amendment approved by**: anas.m, 2026-09-12 — **both parts**: the invariant is amended
+(not the columns added), and all five phases are declared now.
+
+**Applied**: `modules/training/training-invariants.md` §8 carries the infrastructure-rows
+exemption with its two conditions and the approver line; `data-model.md` states the exemption
+for `Session` and for `SignInAttempt` (condition 1) and its invariant-8 trace row no longer
+claims the invariant is satisfied; phases 12–16 are declared below.
+
+---
+
+## Phase 12: The record (governance)
+
+**Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
+
+**Goal**: make this file true before anything is built on it. Closes **F11**.
+
+**Independent Test**: no task in this file is marked `[x]` against a test that does not exist
+or that grades a module other than the one the task names.
+
+**Territory**:
+
+- `specs/002-identity-member-profile/**`
+
+Closes: **F11** — T077, T078, T084, T085 and T096 are marked `[x]` against tests that grade a
+different module or do not exist. No code. First, because every later phase is graded against
+this file.
+
+## Phase 13: The throttle (US1, US2)
+
+**Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
+
+**Goal**: make FR-016 true in production rather than only in the test harness.
+
+**Independent Test**: a failed sign-in from one address does not raise the 429 threshold for
+any other address, asserted against the header the **BFF actually sends**; and parallel
+attempts against one address are throttled as strictly as serial ones.
+
+**Territory**:
+
+- `fitforge-api/src/**`
+- `fitforge-api/tests/**`
+- `fitforge-web/src/**`
+
+Closes: **F1** (both halves — the BFF forwards the source address, the API validates it
+against configured proxies), **F2** (serialize check-and-record), **F3** (throttle register),
+**F6** (throttle the `/me` re-authentications), **N1** (`Retry-After` reads the wrong row).
+First code phase, because F1 is the one defect that takes the product down for every member
+at once.
+
+## Phase 14: The contracts (US1, US2, US3)
+
+**Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
+
+**Goal**: make the API behave as the contracts approved under constitution VII say it does.
+
+**Independent Test**: a second sign-out returns 204; every 401 on an authenticated path
+carries `type: /problems/no-session`; a serialized instant carries a UTC offset, asserted on
+the wire rather than in the model.
+
+**Territory**:
+
+- `fitforge-api/src/**`
+- `fitforge-api/tests/**`
+
+Closes: **F4** (sign-out idempotence), **F5** (`/problems/no-session`), **F7** (UTC offset on
+the wire). Each is a divergence from a document approved *before* implementation, so each is
+fixed in the code rather than by editing the contract — unless the owner rules otherwise, per
+finding.
+
+## Phase 15: The web perimeter, and the tests it never had
+
+**Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
+
+**Goal**: make the CSRF defence hold against the attack it was written for, and put a test
+under the cookie that SC-003 rests on.
+
+**Independent Test**: a request whose `Origin` differs only in scheme is refused; a mutating
+request with no `Origin` is refused; and flipping `httpOnly`, the `__Host-` prefix, `secure`,
+`sameSite` or `path` in `src/lib/session.ts` fails the suite.
+
+**Territory**:
+
+- `fitforge-web/src/**`
+
+Closes: **F12** (compare the whole origin, scheme included), **F13** (refuse Origin-less
+mutating requests), **F10** (the cookie test T078 claimed), and the untested BFF route
+handlers named in the review's coverage section.
+
+## Phase 16: The UI (US1, US3) — UI phase
+
+**Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
+
+**Goal**: give the member the sign-out US1 scenario 5 promises, and stop rendering a control
+the references do not have.
+
+**Independent Test**: a signed-in member can end their session from the UI at every
+breakpoint, and pressing Back afterwards does not restore an authenticated view; the
+Preferences card matches `screenshots/11-profile-desktop-{light,dark}.jpg` with only the
+declared deviations.
+
+**Territory**:
+
+- `fitforge-web/src/**`
+
+Closes: **F9** (there is no way to sign out) and **F14** (the undeclared "Height:" row).
+
+**Blocked on one owner decision before it can be claimed**: the reference screenshots have no
+sign-out control, so either the design gains one — a VI item, and `spec.md`'s visual section
+is amended to carry it — or US1 acceptance scenario 5 is amended to drop the promise. F9
+cannot be closed without choosing, and an agent must not choose for you.
