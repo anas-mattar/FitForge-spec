@@ -1356,6 +1356,23 @@ against configured proxies), **F2** (serialize check-and-record), **F3** (thrott
 First code phase, because F1 is the one defect that takes the product down for every member
 at once.
 
+### Baseline gate on untouched code (`CLAUDE.md` workflow step 2)
+
+Run by anas.m, 2026-09-12, before this phase changes anything. Both code repositories were
+clean and at the tips left by phase 9.
+
+| Repository | Command | Commit | Exit code |
+|---|---|---|---|
+| `fitforge-api` | `dotnet build --warnaserror && dotnet test` | `2233d8e` | **0** |
+| `fitforge-web` | `npm run lint && npm run build && npm run typecheck && npm test` | `a3ca4b9` | **0** |
+
+**What this baseline does and does not establish.** It establishes that A6 and phase 12 —
+both governance-only — changed no code and broke nothing, so any suite failure during phase 13
+belongs to phase 13. It establishes nothing about whether the suites are *sufficient*: F1's
+own defect is invisible to a green `dotnet test`, because `CredentialEndpointTests.cs:42-46`
+injects the `X-Forwarded-For` header the production BFF never sends. A baseline is a
+comparison point, not a verdict — which is the distinction phase 12 was spent on.
+
 ## Phase 14: The contracts (US1, US2, US3)
 
 **Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.
