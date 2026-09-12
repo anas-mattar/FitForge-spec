@@ -1373,6 +1373,96 @@ own defect is invisible to a green `dotnet test`, because `CredentialEndpointTes
 injects the `X-Forwarded-For` header the production BFF never sends. A baseline is a
 comparison point, not a verdict — which is the distinction phase 12 was spent on.
 
+### Tasks
+
+**F1 — the source address, end to end**
+
+- [x] T111 `SourceAddress` (api): the caller is the connection's own address, unless that
+  address is a configured proxy, in which case it is the last `X-Forwarded-For` entry — and
+  **unknown** when a trusted proxy names nobody, names something unparseable, or names
+  another trusted proxy. Unknown is `null`, never a placeholder: the whole of F1 is that
+  "I do not know who this is" was spelled the same way for every caller in the product.
+- [x] T112 `Security:TrustedProxies` (api), required and validated at startup beside the
+  salt, with a message that spends its length on the failure mode rather than the syntax.
+  It has no safe default — an empty list silently makes every caller's address the BFF's —
+  so it is refused at startup rather than defaulted.
+- [x] T113 The BFF reads the caller from its own inbound `x-forwarded-for` — the **last**
+  entry, the one the nearest proxy wrote — and forwards it on sign-in, register,
+  `/me/password` and `DELETE /me`. Omitted, never empty, when unknown.
+- [x] T114 (web) The test the review asked for by name: assert the header **leaves the
+  BFF**, and is absent when the address is unknown. `src/lib/__tests__/source-address.test.ts`.
+- [x] T115 (api) The trust boundary, asserted on the stored bucket key: an untrusted peer
+  varying the header lands in **one** bucket, a trusted proxy's two addresses land in two,
+  and a proxy naming nobody is indistinguishable from a proxy naming itself.
+
+**F2 and N1 — the decision**
+
+- [x] T116 `SignInThrottle.TryRecordAsync` records and decides in one batch, before any
+  hashing. `RetryAfterAsync` and `RecordFailureAsync` are gone: they were the two halves of
+  a check-then-act, and keeping either as a public method would leave the defect available.
+- [x] T117 (api) Sixty-four simultaneous attempts against one address get **exactly ten**
+  through, asserted against both the returned decisions and the rows.
+- [x] T118 `Retry-After` reads the *n*-th most recent attempt rather than the *n*-th oldest,
+  with a fixed clock placing ten failures a minute apart so the two answers differ by nine
+  minutes. Floored at one second.
+
+**F3 — register**
+
+- [x] T119 Register consults the throttle on the same two buckets before any hashing, and
+  answers the 429 `contracts/auth.md` §2 has listed since before implementation. An existence
+  check moved ahead of the hash, so a probe that will be told 409 no longer costs the server
+  210,000 iterations; the unique index remains the arbiter under a race.
+- [x] T120 (api) The eleventh probe against one address is 429 with a `Retry-After`, and a
+  successful registration leaves no row in either bucket.
+
+**F6 — the `/me` re-authentications**
+
+- [x] T121 `POST /me/password` and `DELETE /me` consult and record on the member's own email
+  bucket, and clear it the moment the current password verifies — so a member who proves
+  their password and then picks three rejected new ones has made one successful attempt, not
+  four failed ones.
+- [x] T122 (api) Ten wrong guesses then a 429, on both routes, with the account still present.
+
+### What this phase found on its way through
+
+Three things worth keeping, because each was invisible until something ran.
+
+**The atomic statement deadlocked, and the obvious fix did not help.** Counting both buckets
+under `UPDLOCK, HOLDLOCK` in one `WHERE` deadlocked under T117 within seconds. Splitting the
+counts into ordered statements — so the optimizer could not reorder them — did not help
+either. The deadlock graph from `system_health` said why: the cycle was three processes deep
+and **entirely inside `IX_SignInAttempt_Email_At`**, every lock a `RangeS-U`. A key-range
+lock is taken per key as a scan walks a range, so concurrent scans over a range other
+transactions are inserting into acquire locks in an order nobody controls. No statement
+ordering fixes that, because the resources are not two things — they are however many keys
+the window holds. `sp_getapplock` replaces them with exactly two named resources, always
+taken email-first, and a cycle then cannot be formed rather than being unlikely.
+
+**T117 was verified against a broken implementation before it was trusted.** With the two
+locks disabled the same test admitted 13, 17, 20, 23, 25, 31, 37, 40, 41 and 45 attempts
+across twelve rounds; with them it admitted exactly 10 in all twelve. `plan.md` D7's rule —
+a test that passes both ways is not evidence — applied to a concurrency test, where it is
+easiest to write one that can only pass.
+
+**A stale build briefly made the fix look broken.** Restoring the file after that experiment
+preserved the backup's timestamp, MSBuild judged the project up to date, and three runs
+graded a binary whose source no longer existed. It read exactly like a partially-working
+lock. Worth recording next to F11: a green or red suite is evidence about *what was built*,
+which is not always what is on disk.
+
+### What this phase deliberately does not close
+
+**Unlimited successful registration.** F3's second failure scenario is that every call to
+`/auth/register` reaches a 210,000-iteration hash unauthenticated. The throttle now caps the
+**failing** half of that completely — probes against existing addresses cost an attacker ten
+per address and thirty per source, and no longer cost the server a hash at all. It does not
+cap *successful* registrations, because `contracts/auth.md` §6 says both windows are
+"counted on failed attempts" and a success is not a failure.
+
+Capping it needs §6 amended to count register attempts regardless of outcome — **an owner
+decision, not an agent's**, and one with a real cost: thirty registrations from one office
+in fifteen minutes would then throttle the thirty-first. Recorded here rather than taken.
+
 ## Phase 14: The contracts (US1, US2, US3)
 
 **Declared 2026-09-12 by amendment A6. Amendment approved by**: anas.m, 2026-09-12.

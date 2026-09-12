@@ -168,6 +168,15 @@ equality, and a table of members' home addresses beside their email is exactly t
 row that turns a small breach into a large one. The salt lives in configuration, never in
 source.
 
+**`SourceHash` can also hold a placeholder meaning "not known", and that value is never
+counted.** The API establishes the caller's address itself (`SourceAddress`, phase 13) and
+sometimes cannot: no proxy is configured to speak for the caller, or the one that is named
+nobody. The row is still written — the column is `NOT NULL` and the per-email bucket still
+needs it — but the per-source count is not consulted at all on that path, so these rows are
+inert. Making "unknown" behave like an address is what review finding F1 was: every request
+in the product hashed the same empty string, and thirty failed sign-ins from anywhere locked
+out every member at once.
+
 ## Persisted, per phase
 
 | Phase | Migration | Content |
