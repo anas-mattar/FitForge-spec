@@ -1477,22 +1477,27 @@ and confirmed separately (`docs/sdlc/critical-delivery.md` item 4).
 | | |
 |---|---|
 | Command | `npm run lint && npm run build && npm run typecheck && npm test` in `fitforge-web` |
-| **Exit code** | **NOT YET RUN.** `npm test` alone was run by anas.m, 2026-09-12 — `Test Files 10 passed (10)`, `Tests 86 passed (86)`. The other three commands of the gate have not been run by a human |
+| **Exit code** | **0**, run by anas.m, 2026-09-12 — all four commands, each observed: `eslint` silent; `next build` "Compiled successfully", "Finished TypeScript"; `tsc --noEmit` silent; `Tests 86 passed (86)` across 10 files |
 | Commit gated | `121453b` |
 | `scope-check-repos` | `PASS phase 13 commit 121453b (11 file(s))` |
 | `git diff --stat` | 11 files changed, 266 insertions(+), 12 deletions(-) |
 
-**This row was written as `Exit code 0` and is corrected in place.** The pasted evidence was
-a vitest summary, and a vitest summary is evidence about `npm test` and nothing else. Writing
-the four-command gate beside it assumed the `&&` chain, which is exactly the inference this
-feature's review found five times over in the task records (F11): a true observation recorded
-against a claim it does not support.
+**This row read `0`, then `NOT YET RUN`, and now reads `0` again — the history is kept
+because the middle state is the point.** The first `0` was written from a vitest summary
+alone, on the assumption that the `&&` chain must have got there. That assumption happened to
+be wrong: only `npm test` had been run. The row above now rests on output from all four
+commands, which is why it names what each one printed rather than citing a single number.
 
-It matters here rather than being pedantic. `npm run typecheck` is what caught the two
+This is the F11 failure at small scale, caught in the act. A vitest summary is evidence about
+`npm test` and nothing else, and `npm run typecheck` is the command that caught the two
 call-signature errors this phase introduced — `forwardJson` gained a required parameter and
 two existing callers had not been updated. Neither failure is visible to `npm test`, because
-vitest does not typecheck. A green suite over an unbuildable tree is precisely the shape of
-gap phase 12 was spent on.
+vitest does not typecheck. A green suite over a tree that does not compile is exactly the
+shape of gap phase 12 was spent on.
+
+One line of `stderr` appears in the run and is not a failure: the FR-017 test that asserts an
+unconfigured API address is reported as a *service* problem logs that problem on purpose. The
+log is the assertion.
 
 The governance commit `32f0c4b` is covered by the branch-level `ritual-checks` run recorded
 below, not by a gate of its own.
@@ -1518,7 +1523,9 @@ by this phase.
 ### Two records corrected
 
 **The web gate.** Written as exit 0 against the four-command chain when only `npm test` had
-run; corrected in the block above, and the gate is still owed.
+run, corrected to NOT YET RUN, then run in full and recorded as 0 on evidence from all four
+commands. The correction stands in the block above rather than being tidied away: the record
+was briefly wrong for a reason worth being able to find again.
 
 **A miscopied count.** `fitforge-web` commit `121453b`'s message says *"96 tests pass
 locally"*. The suite has
