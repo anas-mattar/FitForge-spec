@@ -397,8 +397,8 @@ exists to destroy, so writing it to a log would undo the work in the same breath
 
 ### Tests and the loop
 
-- [x] T077 [P] Vitest — the BFF sign-in route maps 401 to a credential error and an unreachable API to a service error. Every row of the mapping table, as 001 did for health.
-- [x] T078 Vitest — the cookie is set with all five attributes, and its value is not readable from a non-`HttpOnly` path.
+- [ ] T077 [P] Vitest — the BFF sign-in route maps 401 to a credential error and an unreachable API to a service error. Every row of the mapping table, as 001 did for health. **Record corrected, phase 12 (F11)**: was `[x]`. `src/lib/__tests__/api-auth.test.ts` imports `postSignIn` from `../auth-transport` — it grades the **transport**, not the route. No test file imports anything under `src/app/api/bff/`. The mapping in `sign-in/route.ts:32-34` can be changed so an unreachable API reports a credential failure — the one outcome `contracts/auth.md:109-111` forbids — with all 76 tests still green. Closes in phase 15.
+- [ ] T078 Vitest — the cookie is set with all five attributes, and its value is not readable from a non-`HttpOnly` path. **Record corrected, phase 12 (F11)**: was `[x]`. **This test does not exist.** Nothing under `src/` references `__Host-`, `httpOnly`, `sameSite`, `writeSessionToken`, `clearSessionToken` or `SESSION_COOKIE` outside `src/lib/session.ts` and five route handlers; `session.ts` has no test of any kind. SC-003 rests on T081's one-off inspection and on nothing standing. Closes in phase 15.
 - [x] T079 **Visual Compliance Loop** (`docs/sdlc/review-process.md`) against `screenshots/01-signin-desktop-{light,dark}.jpg`, in both themes, until the deviation table is empty or holds only the three `spec.md` declares.
 - [x] T080 Verify the responsive rules live at <1024px (VI-001, VI-017). No capture exists below 1024px — `spec.md` says so — so these are checked in a resized browser, not against an image.
 - [x] T081 **SC-003 by inspection**: after sign-in, `localStorage`, `sessionStorage` and every script-readable cookie hold nothing that authenticates, and the browser issues no request to the API origin. Recorded in this file with what was inspected.
@@ -507,8 +507,8 @@ owed at review.
 
 - [x] T082 Redirect an unauthenticated visitor from every authenticated route to sign-in, rendering **no** member data on the way (FR-007).
 - [x] T083 Render the sign-in route with **no app shell** — no sidebar, no bottom bar, no header (VI-015). This is a route-group decision, not a conditional inside the shell.
-- [x] T084 Add `GET /api/bff/me` and have the shell read the member from it server-side.
-- [x] T085 Ensure the back button after sign-out does not restore an authenticated view — the response carries no-store, and the shell re-reads the session on every navigation (US1 scenario 5).
+- [ ] T084 Add `GET /api/bff/me` and have the shell read the member from it server-side. **Record corrected, phase 12 (F11)**: was `[x]`. The route exists; the second half did not happen. `src/app/(app)/layout.tsx:27` calls `getMe()` directly, so `GET /api/bff/me` has no caller and is dead code — and it is also the route that the false "called during a server-side render" rationale in `bff.ts:27-29` was built around (F13). Decide in phase 15 whether the shell uses it or the route goes.
+- [ ] T085 Ensure the back button after sign-out does not restore an authenticated view — the response carries no-store, and the shell re-reads the session on every navigation (US1 scenario 5). **Record corrected, phase 12 (F11)**: was `[x]`. **There is no sign-out** — no component in `fitforge-web/src` references the route (F9), so this guards a path no member can take. Two further gaps behind it: `no-store` does not govern Next's client Router Cache, which is what serves a Back after `router.push()` (N21), and `src/proxy.ts` has no tests. Closes in phase 16, after F9 gives it something to guard.
 
 ### Tests
 
@@ -593,7 +593,7 @@ fails 2 of 66. That is the branch a cookie-presence check would have got wrong.
 ### Tests and the loop
 
 - [x] T095 [P] Vitest — switching units re-renders every displayed value and sends no measurement to the BFF (VI-028).
-- [x] T096 **Visual Compliance Loop** against `screenshots/11-profile-desktop-{light,dark}.jpg`, both themes, until the deviation table is empty or holds only the declared deviations.
+- [ ] T096 **Visual Compliance Loop** against `screenshots/11-profile-desktop-{light,dark}.jpg`, both themes, until the deviation table is empty or holds only the declared deviations. **Record corrected, phase 12 (F11)**: was `[x]`. The loop ran and found two real deviations, both fixed — but it missed a third that ships: `PreferencesCard.tsx:113-117` renders a "Height:" row present in neither reference nor VI-019/VI-020, shifting every control below it. A fourth deviation, undeclared, and an **addition** rather than an omission, so the exit condition was not met. It is also permanently `—`, since nothing writes `heightCm` (F14). Closes in phase 16.
 - [x] T097 Verify the single-column layout below 1024px live (VI-017).
 
 ### Visual Compliance Loop — result
@@ -616,7 +616,14 @@ Measured against a running application, both themes, four widths.
 | VI-028 | units re-render, nothing stored changes | `167.5 cm` → `5' 6"`; the only request was `{"units":"Imperial"}` |
 | both themes | geometry identical, colours differ | geometry byte-identical; card fill differs |
 
-**Two deviations found, both fixed.**
+**Two deviations found, both fixed — and a third missed.** The two below are recorded
+accurately. **Record corrected, phase 12 (F11, F14)**: the loop's exit condition was not
+met. `PreferencesCard.tsx:113-117` renders a "Height:" row that appears in neither reference
+capture nor VI-019/VI-020, shifting every control beneath it — an undeclared fourth
+deviation, and an *addition* rather than an omission, which is the kind this table was least
+likely to catch: the loop compares what the reference shows against what the screen shows,
+and an extra element is only visible if you are looking for what should **not** be there. It
+closes in phase 16; T096 is reopened above.
 
 **VI-022 — the wrong word.** `Intl`'s `shortOffset` renders `GMT+8` in `en-GB`. The
 reference writes `UTC+8`. Same instant, different word, and the reference fixes the word.
@@ -1236,6 +1243,58 @@ or that grades a module other than the one the task names.
 Closes: **F11** — T077, T078, T084, T085 and T096 are marked `[x]` against tests that grade a
 different module or do not exist. No code. First, because every later phase is graded against
 this file.
+
+### Tasks
+
+- [x] T108 Return T077, T078, T084, T085 and T096 to `[ ]`, each carrying **what is actually
+  true**, the finding that found it, and the phase that closes it. The task text itself is
+  untouched: the requirement was never wrong, only the claim that it was met.
+- [x] T109 Correct every completion claim that the five falsify — the "Phase N is done" lines
+  and the phase summaries that counted those tasks as delivered.
+- [x] T110 Leave the Gate blocks alone. Each records a command a human ran and the code it
+  exited with, and every one of those runs really happened. A gate certifies that the suite
+  passed, never that the suite was sufficient — editing them would replace a true record with
+  a different one.
+
+### What this phase does not do
+
+It writes no test and fixes no code. The five tasks stay open until phases 15 and 16 close
+them. The point is that the file now says so.
+
+**The distinction T110 rests on, because it is the one worth carrying forward.** Eleven gates
+were run by a human and exited 0. Not one of those records is false: `npm test` really did
+pass. What was false was this file's claim about *what those tests covered*. A green gate is
+evidence that the suite passed, and evidence of nothing else — and the way that becomes
+dangerous is exactly this: a suite that grades a layer below the one the record names, with
+the gap recorded nowhere. Correcting the claim and preserving the gate is what keeps both
+facts true at once.
+
+### What was corrected
+
+| Task | Was | Is |
+|---|---|---|
+| T077 | `[x]` — the BFF sign-in route's mapping is tested | `[ ]` — the test grades `auth-transport`, not the route; no test imports anything under `src/app/api/bff/` |
+| T078 | `[x]` — the cookie's five attributes are tested | `[ ]` — the test does not exist; `src/lib/session.ts` has no test of any kind |
+| T084 | `[x]` — the route exists and the shell reads from it | `[ ]` — the route exists; the shell calls `getMe()` directly, so it has no caller |
+| T085 | `[x]` — Back after sign-out is guarded | `[ ]` — no sign-out control exists, so there is no path to guard |
+| T096 | `[x]` — the loop's exit condition was met | `[ ]` — an undeclared fourth deviation ships |
+
+Phase 9's Visual Compliance Loop result is corrected in place for the same reason. No Gate
+block was touched (T110).
+
+**Gate (human-run)**: `pwsh -File scripts/ritual-checks.ps1` on the governance repository.
+
+| | |
+|---|---|
+| Command | `pwsh -File scripts/ritual-checks.ps1` |
+| **Exit code** | *(pending — human-run)* |
+| Commit gated | *(pending)* |
+| `scope-check` | *(pending)* |
+| `git diff --stat` | *(pending)* |
+
+Expect `enforcement-pack FAIL` on `CriticalEvidence` — `human-pr-review.md` still does not
+exist and cannot until Ahmad reviews at the end (GAP-022). Six of seven members should be
+green; read the member lines, not the summary.
 
 ## Phase 13: The throttle (US1, US2)
 
