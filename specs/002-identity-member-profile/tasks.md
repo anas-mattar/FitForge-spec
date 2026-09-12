@@ -1649,24 +1649,34 @@ clearing, which cannot cap a success at all.
 
 ### Tasks
 
-- [ ] T123 `contracts/auth.md` §6 amended: registration counts every attempt whatever its
+- [x] T123 `contracts/auth.md` §6 amended: registration counts every attempt whatever its
   outcome and a success is not cleared, with the approver and date recorded in the contract
   itself. Sign-in and the `/me` re-authentications keep the failed-attempts rule unchanged.
-- [ ] T124 `RegisterAsync` no longer calls `ClearEmailAsync` on success. One call removed;
+- [x] T124 `RegisterAsync` no longer calls `ClearEmailAsync` on success. One call removed;
   the comment above it is replaced rather than deleted, because a reader who finds no
   clearing here should find out why in the same place.
-- [ ] T125 `SignInThrottle`'s class remarks stop claiming a success costs nothing in either
-  bucket. That sentence is true of sign-in and, since T124, false of registration — and it
-  is the kind of stale doc that is read as a specification.
-- [ ] T126 (api) Thirty registrations from one source succeed and the thirty-first is a 429
-  with a `Retry-After`. This is the test that closes F3(b); it must be run against the phase
-  13 code and seen to fail before it is trusted (`plan.md` D7).
-- [ ] T127 (api) `Registering_successfully_costs_nothing_in_either_bucket` is inverted rather
-  than deleted — same scenario, opposite assertion, renamed to say what is now true. A test
-  asserting the old rule would otherwise pass and quietly re-specify it.
-- [ ] T128 (api) `Probing_one_address_on_register_runs_out_of_attempts` has its arithmetic
+- [x] T125 `SignInThrottle`'s class remarks stop claiming a success costs nothing in either
+  bucket, and `ClearEmailAsync`'s own remarks now name the hazard that took registration off
+  it: removing the attempt's own row is safe only where the caller had to *prove* a password
+  to get there. Registration proves nothing. That sentence is the whole defect in one line,
+  and it belongs on the method, not only in this file.
+- [x] T126 (api) Thirty registrations from one source succeed and the thirty-first is a 429
+  with a `Retry-After`. **Run against the phase 13 code first and seen to fail**
+  (`plan.md` D7): `Expected: TooManyRequests, Actual: Created` — the thirty-first
+  registration was admitted, which is finding F3(b) reproduced rather than argued.
+- [x] T127 (api) `Registering_successfully_costs_nothing_in_either_bucket` inverted rather
+  than deleted — same scenario, opposite assertion, renamed to
+  `Registering_successfully_still_costs_a_slot_in_the_source_bucket`. Also seen to fail
+  first: `Expected: 1, Actual: 0`. A test left asserting the old rule would have passed and
+  quietly re-specified it.
+- [x] T128 (api) `Probing_one_address_on_register_runs_out_of_attempts` has its arithmetic
   corrected: the successful registration now occupies one email slot, so **nine** further
   probes are answered 409 and the tenth is the 429.
+- [x] T129 (api) **Five existing tests changed, none of them foreseen when this phase was
+  declared.** Each registered a member and then spent the full bucket, so each broke on the
+  one row registration now leaves. Listed in full below, because "the phase changed five
+  tests it did not mention" is exactly the kind of thing a task list should not have to be
+  re-derived from a diff.
 
 ### The side effect, recorded rather than compensated
 
@@ -1677,6 +1687,103 @@ around: a member who chose a password sixty seconds ago does not need ten guesse
 every mechanism for exempting it — a second row type, an outcome column — is a schema change,
 which is a migration, which on a Critical feature is a rollback plan and a far larger phase
 than the defect warrants.
+
+### What this phase found on its way through
+
+**The declaration understated the side effect, and the test suite said so.** Five tests
+failed, all with the same cause and none of them anticipated above: each registered a member
+and then spent the whole bucket, so each lost an attempt to the row registration now leaves.
+
+| Test | Was | Is |
+|---|---|---|
+| `A_real_address_throttles_at_exactly_the_same_point` | register, then 10 × 401, then 429 | register, **sign in successfully**, then 10 × 401, then 429 |
+| `A_successful_sign_in_clears_that_addresss_bucket` | 9 failures, then a success | 8 failures, then a success — a tenth attempt would be refused before the password was read, so the success this test is about could not happen |
+| `A_successful_sign_in_does_not_clear_the_source_bucket` | counted **all** rows before and after | counts rows **not belonging to this member** — a plain total worked only while registration cleared itself, and would now measure that clearing instead of the source bucket |
+| `Guessing_the_current_password_runs_out_of_attempts` | 10 guesses, then 429 | 9 guesses, then 429 |
+| `Guessing_the_password_on_delete_runs_out_of_attempts` | 10 guesses, then 429 | 9 guesses, then 429 |
+
+**One of those five is not arithmetic, and is the finding of this phase.**
+`A_real_address_throttles_at_exactly_the_same_point` exists to hold a security property: a
+real address and one that does not exist must throttle identically, or 429-versus-401 becomes
+the existence oracle §3 spends a decoy hash to close. Counting registrations **breaks that
+property for fifteen minutes after signup** — a just-registered address runs out one attempt
+early.
+
+The test was not relaxed to accommodate that, because a test rewritten to document a
+divergence is finding F4's exact criticism. Instead it now signs in successfully first,
+reaching the steady state every address that has ever been used sits in, and asserts the
+property there — where it still holds exactly. The narrowing is asserted separately and
+deliberately by a **new** test, `An_address_registered_inside_the_window_starts_one_slot_down`.
+
+**Why the narrowing is judged tolerable — and why the human review should check that
+judgment.** What leaks is "this address registered in the last fifteen minutes", and reading
+it costs ten requests. `POST /auth/register` answers the strictly *larger* question "does
+this address exist" in **one** request, by design, and §2 accepts that asymmetry openly. A
+ten-request oracle for less information than a one-request oracle already gives is dominated,
+not new. That is a judgement about severity, not a fact, and it is the one thing in this
+phase most worth a second opinion.
+
+**The alternative that was considered and not taken.** The narrowing is avoidable: keep the
+row in the source bucket but take it out of the email one, by rewriting the successful
+attempt's `NormalizedEmail` to a value no real address normalizes to — the same trick
+`SourceHash` already uses for "not known" (see `data-model.md`). It preserves the property,
+keeps the new member's tenth attempt, and changes none of the five tests above. It was not
+taken because identifying *which* row to rewrite means returning the inserted row's id from
+`SignInAttemptCounter`, and that is the one piece of SQL on this branch that took three
+attempts and a deadlock-graph reading to get right. Trading a dominated leak for an edit to
+that file, mid-remediation, with eight blocking findings still open, is the wrong trade —
+but it is the owner's to reverse, and it is written down here so that reversing it does not
+require rediscovering it.
+
+**Gate (human-run)**: one, because only `fitforge-api` changed. Critical forbids batching and
+forbids `ci-held` (`docs/sdlc/critical-delivery.md` item 4), so this is a live run by the
+owner.
+
+| | |
+|---|---|
+| Command | `dotnet build --warnaserror && dotnet test` in `fitforge-api` |
+| **Exit code** | **0**, run by anas.m, 2026-09-12 — both halves observed: `Build succeeded. 0 Warning(s), 0 Error(s)`; then `Failed: 0, Passed: 29` (`FitForge.Domain.Tests`) and `Failed: 0, Passed: 117` (`FitForge.Api.Tests`) |
+| Commit gated | `5f63fab` |
+| `scope-check-repos` | `PASS phase 17 commit 5f63fab (4 file(s))` |
+| `git diff --stat` | 4 files changed, 169 insertions(+), 31 deletions(-) |
+
+**The first run of this gate did not happen, and is recorded because it nearly counted.** The
+command was typed `dotnet build --warnaserror && dotnet test~`. The build half ran and
+printed `Build succeeded. 0 Warning(s), 0 Error(s)`; the second half never existed, so the
+chain failed on `dotnet-test~ does not exist`. A build-succeeded banner sitting under a
+four-word gate claim is review finding F11's shape exactly, and it is the second time on this
+branch a gate row was one step from resting on half its evidence — the phase 13 web row is
+the first. Both are kept. The row above therefore names what **each half** printed rather
+than citing one number.
+
+**Branch checks after this phase** — `pwsh -File scripts/ritual-checks.ps1`, exit **1**,
+**6 of 7 members green, `CriticalEvidence` the sole failure**. Unchanged in kind from phases
+10, 12 and 13: `human-pr-review.md` cannot exist until T100 (GAP-022).
+
+| Member | Result |
+|---|---|
+| `doc-lint` | OK — 42 docs, every referenced path resolves |
+| `enforcement-pack` | **FAIL** — `CriticalEvidence` only (`FAIL (1 issue(s))`). The two `PhaseSizeWarning`s are the historical planning commits `ae00e4e` and `d067570`; this phase's 200 lines triggered neither |
+| `scope-check` | OK |
+| `scope-repos` | OK — **`PASS phase 17 commit 5f63fab (4 file(s))`**, graded against the Territory declared in `1d962af`, this commit's parent |
+| `digests` | OK — 5 fresh, 73 markers |
+| `roadmap-claims` | OK |
+| `verify-kit` | OK — 2 developers declared, so the team evidence rule applies |
+
+That run predates this governance commit and so does not grade it; the next run does, exactly
+as phase 13's governance commit was covered by the run after it.
+
+### What is still open on this branch
+
+Phase 17 closes **F3 entirely**. Eight blocking findings remain, and all three remediation
+phases that would close them are declared and unbuilt:
+
+| Phase | Findings | State |
+|---|---|---|
+| 14 | F4, F5, F7 | declared, unbuilt |
+| 15 | F10, F12, F13 | declared, unbuilt |
+| 16 | F9, F14 | declared, unbuilt — **blocked on an owner decision** about the sign-out control |
+| T100 | — | `human-pr-review.md` does not exist in any form; it is the one artifact the implementing agent must not write |
 
 ### One thing this phase does not fix, and should be looked at in review
 

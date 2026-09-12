@@ -128,6 +128,14 @@ one slot in its own **email** bucket for the rest of the window, leaving the new
 first sign-in attempts rather than ten. Exempting it would need a second row type or an
 outcome column, which is a schema change and a far larger thing than the defect.
 
+That side effect is observable, so it is stated rather than left to be found: **for fifteen
+minutes after signup, and only then, an address runs out of sign-in attempts one earlier than
+an address that does not exist.** Everywhere else the two are indistinguishable, which is the
+property §3's decoy hash exists to hold. The residue leaks "this address registered in the
+last fifteen minutes" at a cost of ten requests, where §2 already answers the larger question
+"does this address exist" in one — so it is dominated by an oracle this contract accepts
+openly, not a new one.
+
 ## 7. Upstream unavailability (FR-017)
 
 If the API is unreachable, times out, or answers 5xx, the BFF returns to the page a
