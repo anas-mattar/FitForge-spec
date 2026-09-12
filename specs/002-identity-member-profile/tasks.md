@@ -1288,9 +1288,9 @@ block was touched (T110).
 |---|---|
 | Command | `pwsh -File scripts/ritual-checks.ps1` |
 | **Exit code** | *(pending — human-run)* |
-| Commit gated | *(pending)* |
-| `scope-check` | *(pending)* |
-| `git diff --stat` | *(pending)* |
+| Commit gated | `81c79ee` |
+| `scope-check` | `PASS phase 12 commit 81c79ee (1 file(s))` |
+| `git diff --stat` | 1 file changed, 65 insertions(+), 6 deletions(-) |
 
 Expect `enforcement-pack FAIL` on `CriticalEvidence` — `human-pr-review.md` still does not
 exist and cannot until Ahmad reviews at the end (GAP-022). Six of seven members should be
