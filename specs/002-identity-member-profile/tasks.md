@@ -1463,6 +1463,10 @@ Capping it needs §6 amended to count register attempts regardless of outcome �
 decision, not an agent's**, and one with a real cost: thirty registrations from one office
 in fifteen minutes would then throttle the thirty-first. Recorded here rather than taken.
 
+> **Taken 2026-09-12 by anas.m, and closed by phase 17** — the same cost, accepted. This
+> paragraph stands as written because the decision it describes is what phase 17 acts on; a
+> record of a deferral is not made untrue by the deferral ending.
+
 **Gate (human-run)**: one per code repository. Critical forbids batching, so both are run
 and confirmed separately (`docs/sdlc/critical-delivery.md` item 4).
 
@@ -1596,3 +1600,89 @@ Closes: **F9** (there is no way to sign out) and **F14** (the undeclared "Height
 sign-out control, so either the design gains one — a VI item, and `spec.md`'s visual section
 is amended to carry it — or US1 acceptance scenario 5 is amended to drop the promise. F9
 cannot be closed without choosing, and an agent must not choose for you.
+
+## Phase 17: The other half of F3 — a success is an attempt too
+
+**Declared 2026-09-12. Owner decision taken 2026-09-12 by**: anas.m — the decision phase 13
+recorded and did not take (see *"What this phase deliberately does not close"* above).
+
+**Built out of numeric order, deliberately.** Phases 14, 15 and 16 are declared and unbuilt;
+this one is built first because the owner prioritised it. Nothing depends on the order — a
+phase number is a scope label, not a schedule, and `scripts/scope-check.ps1` grades each
+phase against the Territory declared in this file at the commit's parent. The out-of-order
+build is recorded here so a later reader does not read it as a skipped phase.
+
+**Goal**: cap `POST /auth/register` on the per-source bucket whatever the outcome, closing
+F3's second failure scenario.
+
+**Independent Test**: thirty registrations of thirty *distinct, new* addresses from one
+source all succeed and the thirty-first is refused with a `Retry-After` — a test that fails
+against the phase 13 code, where the count returns to zero after every success.
+
+**Territory**:
+
+- `fitforge-api/src/**`
+- `fitforge-api/tests/**`
+
+Closes: the open half of **F3**. Does not touch F4, F5, F7, F9, F10, F12, F13 or F14, which
+remain open for phases 14–16.
+
+### The contract is amended first (constitution VII)
+
+`contracts/auth.md` §6 said *"both counted on **failed** attempts"*, and a successful
+registration is not a failure. Phase 13 therefore cleared it — correctly, against the
+contract as written — and that clearing is the defect: `ClearEmailAsync` deletes every row
+carrying the address, **including the one the attempt itself wrote a moment earlier**, so the
+row never reaches the source count it was supposed to join.
+
+The arithmetic an attacker gets from that: register a distinct new address, pay nothing;
+repeat. The source bucket returns to zero after each success and every call reaches the
+deliberate 210,000-iteration hash unauthenticated. That is review finding F3's failure
+scenario (b) exactly, and it survived phase 13 untouched.
+
+So §6 is amended before the code changes, not after — the amendment is the approval, and
+without it this phase would be an agent quietly choosing a security/product trade-off that
+belongs to the owner. **What it costs, accepted knowingly**: thirty genuine signups from one
+office, gym or NAT inside fifteen minutes will throttle the thirty-first. The remedy is
+operational — trust that site as its own proxy entry, or raise the limit — not a return to
+clearing, which cannot cap a success at all.
+
+### Tasks
+
+- [ ] T123 `contracts/auth.md` §6 amended: registration counts every attempt whatever its
+  outcome and a success is not cleared, with the approver and date recorded in the contract
+  itself. Sign-in and the `/me` re-authentications keep the failed-attempts rule unchanged.
+- [ ] T124 `RegisterAsync` no longer calls `ClearEmailAsync` on success. One call removed;
+  the comment above it is replaced rather than deleted, because a reader who finds no
+  clearing here should find out why in the same place.
+- [ ] T125 `SignInThrottle`'s class remarks stop claiming a success costs nothing in either
+  bucket. That sentence is true of sign-in and, since T124, false of registration — and it
+  is the kind of stale doc that is read as a specification.
+- [ ] T126 (api) Thirty registrations from one source succeed and the thirty-first is a 429
+  with a `Retry-After`. This is the test that closes F3(b); it must be run against the phase
+  13 code and seen to fail before it is trusted (`plan.md` D7).
+- [ ] T127 (api) `Registering_successfully_costs_nothing_in_either_bucket` is inverted rather
+  than deleted — same scenario, opposite assertion, renamed to say what is now true. A test
+  asserting the old rule would otherwise pass and quietly re-specify it.
+- [ ] T128 (api) `Probing_one_address_on_register_runs_out_of_attempts` has its arithmetic
+  corrected: the successful registration now occupies one email slot, so **nine** further
+  probes are answered 409 and the tenth is the 429.
+
+### The side effect, recorded rather than compensated
+
+A successful registration now occupies one slot in its **own** email bucket for the rest of
+the window, leaving the new member nine first sign-in attempts rather than ten. That is a
+consequence of counting, not an intent. It is left alone and written down rather than worked
+around: a member who chose a password sixty seconds ago does not need ten guesses at it, and
+every mechanism for exempting it — a second row type, an outcome column — is a schema change,
+which is a migration, which on a Critical feature is a rollback plan and a far larger phase
+than the defect warrants.
+
+### One thing this phase does not fix, and should be looked at in review
+
+`spec.md` **FR-016** reads *"Repeated failed **sign-in** attempts MUST be throttled"*. Every
+register-side throttling rule on this branch — phase 13's 429 and this phase's cap — rests on
+`contracts/auth.md` §2 and §6, not on FR-016, and §6's heading still cites FR-016 as though
+it were the source. The requirement and the contract have drifted apart. Amending a
+functional requirement is a spec amendment and a wider decision than the one taken here, so
+it is flagged for the human review rather than taken silently.

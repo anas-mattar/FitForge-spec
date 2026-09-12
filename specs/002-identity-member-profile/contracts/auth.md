@@ -83,12 +83,15 @@ per hour (so the hot path is not a write per request).
 
 ## 6. Throttling (FR-016)
 
-Two fixed windows of 15 minutes, both counted on **failed** attempts:
+Two fixed windows of 15 minutes:
 
 | Bucket | Limit |
 |---|---|
 | per submitted email (normalized, whether or not it exists) | 10 |
 | per source address, supplied by the BFF as `X-Forwarded-For` | 30 |
+
+Sign-in (§3) and the `/me` re-authentications count **failed** attempts. Registration (§2)
+counts **every** attempt, whatever its outcome — see the amendment below.
 
 Exceeding either returns **429** `type: /problems/too-many-attempts` with `Retry-After` in
 seconds.
@@ -99,6 +102,31 @@ oracle §3 spent a decoy hash to close.
 
 A successful sign-in clears that email's bucket. The source bucket is not cleared — one
 success does not license thirty more guesses.
+
+### Amendment — a successful registration is not cleared
+
+**Amended 2026-09-12. Approved by**: anas.m. **Reason**: feature 002 review finding F3,
+second failure scenario.
+
+This section originally counted failed attempts only, and a registration that succeeds has
+not failed at anything. Clearing it turned out to uncap the endpoint entirely: the clearing
+deletes every row carrying the address, **including the one the attempt itself wrote a
+moment earlier**, so a script registering distinct new addresses returns the source count to
+zero after every success and each call still reaches the deliberate 210,000-iteration hash,
+unauthenticated and without limit.
+
+So a source may register **30 times in 15 minutes**; the thirty-first is refused, whether or
+not any of the thirty failed. A successful registration is recorded and is not cleared.
+
+**The cost, accepted knowingly**: thirty genuine signups from one office, gym or NAT inside
+fifteen minutes will throttle the thirty-first. The remedy is operational — trust that site
+as its own entry in `Security:TrustedProxies` so it gets its own bucket, or raise the limit —
+not a return to clearing, which cannot cap a success at all.
+
+One side effect is accepted rather than compensated: a successful registration also occupies
+one slot in its own **email** bucket for the rest of the window, leaving the new member nine
+first sign-in attempts rather than ten. Exempting it would need a second row type or an
+outcome column, which is a schema change and a far larger thing than the defect.
 
 ## 7. Upstream unavailability (FR-017)
 
