@@ -832,6 +832,18 @@ gated audit evidence, and this paragraph is the reconciliation.
 
 **Gate (human-run)**: `pwsh -File scripts/ritual-checks.ps1` on the governance repository.
 
+| | |
+|---|---|
+| Command | `pwsh -File scripts/ritual-checks.ps1` |
+| **Exit code** | **1**, run by anas.m, 2026-09-12 — **6 of 7 members green; the sole failure is `CriticalEvidence`** |
+| Commit gated | `5c740f1` |
+| `scope-check` | `PASS phase 10 commit 5c740f1 (2 file(s))` |
+| `git diff --stat` | 2 files changed, 391 insertions(+), 4 deletions(-) |
+
+One run gates this phase and phase 12: `ritual-checks` grades the **branch**, not a commit.
+The member breakdown, and why the exit code cannot be 0 on a Critical branch before merge, are
+recorded under phase 12's Gate block. Neither phase can carry a 0 until T100 exists.
+
 ---
 
 ## Not in this feature
@@ -1287,10 +1299,36 @@ block was touched (T110).
 | | |
 |---|---|
 | Command | `pwsh -File scripts/ritual-checks.ps1` |
-| **Exit code** | *(pending — human-run)* |
+| **Exit code** | **1**, run by anas.m, 2026-09-12 — **6 of 7 members green; the sole failure is `CriticalEvidence`** |
 | Commit gated | `81c79ee` |
 | `scope-check` | `PASS phase 12 commit 81c79ee (1 file(s))` |
 | `git diff --stat` | 1 file changed, 65 insertions(+), 6 deletions(-) |
+
+**This is the first gate in the feature that could not exit 0, and the reason is structural.**
+Phases 1–9 and 11 gate on `dotnet test` or `npm test` in a code repository, and all exited 0.
+Phases 10 and 12 gate on `ritual-checks` in the governance repository, whose `CriticalEvidence`
+member demands `human-pr-review.md` — an artifact that cannot exist until Ahmad reviews at the
+end (Definition of Done item 6 is "once per feature, **at merge**"). That is GAP-022 exactly,
+and it is why the exit code is recorded beside the member breakdown rather than alone: on this
+branch the summary line carries no information, and only the seven member lines do.
+
+What the run established, beyond the one expected failure:
+
+| Member | Result |
+|---|---|
+| `doc-lint` | OK — 42 docs, every referenced path resolves |
+| `enforcement-pack` | **FAIL** — `CriticalEvidence` only. Two non-blocking `PhaseSizeWarning`s on `ae00e4e` and `d067570`, both planning-stage commits, neither from this phase |
+| `scope-check` | OK — every phase commit PASS, including `PASS phase 12 commit 81c79ee`; the three amendment commits correctly read as *not applicable* |
+| `scope-repos` | OK — all 11 code-phase commits PASS across both repositories |
+| `digests` | OK — 5 fresh, 73 markers |
+| `roadmap-claims` | OK |
+| `verify-kit` | OK — 2 developers declared, so the **team** evidence rule applies |
+
+**Whether this closes phase 12 is the owner's call, and it is not an agent's to make.** The
+evidence is that the phase's own work is clean on every member that can speak to it, and that
+the one red member is red for a reason that has nothing to do with this phase and will stay red
+until T100. The `scope-check: WARN commit bd6c737` line is the historical phase-11 warning
+explained above, unchanged by this phase.
 
 Expect `enforcement-pack FAIL` on `CriticalEvidence` — `human-pr-review.md` still does not
 exist and cannot until Ahmad reviews at the end (GAP-022). Six of seven members should be
