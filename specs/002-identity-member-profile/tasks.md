@@ -669,8 +669,15 @@ this screen against the real API end to end, and that belongs in the human revie
 
 ## Phase 10: Audit evidence (governance)
 
-**Territory**: this feature's spec directory only — implicitly in territory, declared here as
-nothing so that a stray file outside it is a scope-check failure.
+**Territory**:
+
+- `specs/002-identity-member-profile/**`
+
+This feature's spec directory only. The entry grants nothing new — that directory is
+implicitly in territory on every phase — and this file's header says it "is never
+declared". Phase 10 is the documented exception, because it is the only phase with no
+other path to name, and a `**Territory**` marker with an empty list is the one shape
+`scripts/scope-check.ps1` rejects outright (amendment A5, approved by anas.m 2026-09-12).
 
 - [ ] T098 Complete the Gate blocks above: the command, its exit code, the `scope-check` and `scope-check-repos` verdicts, and `git diff --stat`, for all nine code phases (critical-delivery item 3).
 - [ ] T099 File the AI review as `ai-code-review.md` with the Reviewer Provenance block, **including the item-by-item pass over all ten training invariants** (critical-delivery item 2, SC-006). `data-model.md`'s invariant trace is the starting point, not the answer.
@@ -837,6 +844,65 @@ its central mechanism. The alternative - holding phase 3 ungated and unmerged un
 and this paragraph is what stops that being quietly forgotten.
 
 **Amendment approved by**: anas.m, 2026-09-10
+
+---
+
+## Phase 10 amendment request
+
+### A5 — phase 10's Territory block declared no entries, and the check rejects that
+
+**Found by running the check, not by reading the file.** `pwsh -File scripts/scope-check.ps1`
+against the first attempt at the phase 10 records commit:
+
+```text
+scope-check: FAIL phase 10 commit 8cc830b: **Territory** declared for phase 10 in
+  specs/002-identity-member-profile/tasks.md but the entry list is empty
+  (declare the paths, or remove the marker)
+```
+
+`8cc830b` is not reachable on this branch. It was withdrawn (`git reset --soft`) the moment
+the check failed, rather than left in history as a failing phase commit — `scope-check.ps1:276`
+grades **every** commit from the merge base to HEAD, so one failing commit fails the branch
+for the rest of its life. "Commit now, fix after" was never available.
+
+**Why it failed.** Phase 10's Territory read *"this feature's spec directory only —
+implicitly in territory, declared here as nothing so that a stray file outside it is a
+scope-check failure."* The intent was right and the check agrees with it: `Get-Territory`
+adds `specs/$FeatureBranch/**` as an implicit entry for every phase. But a `**Territory**`
+marker with **zero entries** is read as a malformed declaration, not an empty one, and
+fails closed (`scope-check.ps1:220-223`). Prose where the parser wants a list. Phase 10 is
+the only phase in this feature that names no paths of its own, which is why nine phases and
+eleven gate runs never met it.
+
+**The two candidate fixes, and why they are not equivalent.**
+
+- **(a) Declare the directory explicitly** — one entry, `specs/002-identity-member-profile/**`.
+- **(b) Remove the `**Territory**` marker** — no marker, no parse.
+
+(b) looks tidier and is worse. With no marker, `scope-check.ps1:224-227` emits
+`WARN … no territory declared` and **returns true immediately**, short-circuiting the stray
+check entirely. Phase 10 would stop being graded at all — the precise opposite of what the
+original wording was reaching for. The block said it wanted a stray file to be a failure;
+only (a) delivers that.
+
+**Not widening.** The spec directory is already in territory implicitly on every phase, so
+(a) grants nothing the phase did not have. It is still an amendment to an approved
+`tasks.md`, and Territory is exactly the field where a retroactive edit is the abuse the
+rule exists to prevent — which is why it was recorded here and applied by nobody until an
+approver signed it (constitution I, amendment authority; the A3 precedent).
+
+**One inconsistency it creates, stated rather than hidden.** This file's header says the
+feature's own spec directory "is implicitly in territory and is never declared". After (a)
+that sentence has exactly one exception, and it is phase 10. The header is left alone: the
+narrower fix is to record the exception where it lives rather than to amend a general
+statement that is true of every other phase.
+
+**Amendment approved by**: anas.m, 2026-09-12 — **option (a)**.
+
+**Applied**: phase 10's Territory block above now declares `specs/002-identity-member-profile/**`.
+This amendment is committed **before** the phase 10 records commit, because
+`scope-check.ps1:194` resolves the declaration from the commit's **parent** — a commit can
+never declare its own territory. That is the same ordering A3 was reverted for not having.
 
 ---
 
