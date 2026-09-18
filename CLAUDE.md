@@ -98,6 +98,9 @@ links to prevail).
 - Do not refactor unrelated files or change unrelated features.
 - Do not add packages unless approved in `plan.md`.
 - Do not change architecture unless approved in `plan.md`.
+- Amending an approved feature document records who approved it, and **you never approve
+  your own amendment** (constitution I, Amendment authority — read it for the record shape
+  and the one exemption).
 - Do not claim success until the user runs the gate and confirms the exit code — or, on a
   Lite/Micro/Standard feature whose approved plan (Micro: mini-spec) declares
   `**Gate Certification**: ci-held`,

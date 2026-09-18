@@ -63,7 +63,8 @@ pwsh -File scripts/scope-check-repos.ps1   # multi-repo only; n/a elsewhere
    scope-repos + digests + roadmap-claims, plus the adoption doctor in adopted projects).
 4. On `FAIL`, remediate and redo the phase commit: revert the undeclared change — or, if
    it is legitimate scope discovery, amend the phase's **Territory** in `tasks.md` (owner
-   approval) in a commit made **before** the re-committed phase. The check reads the
+   approval, recorded as constitution I requires) in a commit made **before** the
+   re-committed phase. The check reads the
    declaration from the commit's parent, so same-commit widening never passes. On a
    Micro feature the territory amendment lives in `spec.md`, must stay within the lane's
    file cap, and the standing alternative is always **promotion to Standard** (full spec
@@ -118,7 +119,10 @@ change MUST NOT be merged until a human reviewer approves it (constitution IX).
 
 <!-- digest: Human review is required before merge — a change is never merged until a human reviewer approves (constitution IX). -->
 
-Human reviewer checks (record in `specs/_templates/human-pr-review-template.md`):
+<!-- digest: The human reviewer judges whether an amendment's approver really agreed — no machine can check that. -->
+
+Human reviewer checks (record in `specs/NNN-name/human-pr-review.md`, written from
+`specs/_templates/human-pr-review-template.md`):
 
 - Actual UI vs visual references
 - Business behavior
@@ -128,6 +132,12 @@ Human reviewer checks (record in `specs/_templates/human-pr-review-template.md`)
 - Code diff
 - Gate result
 - No unrelated changes
+- Every amendment in the feature diff carries its record — each change to an approved
+  `spec.md`, `plan.md`, `tasks.md` or `contracts/` file names an approver who is not the
+  implementing agent (constitution I). A machine can grade that a record exists and agrees
+  with its commit; **whether the named person actually agreed — and whether the agent
+  approved its own amendment — is this reviewer's to judge**, and it is the half no check
+  reaches.
 
 ## Merge
 

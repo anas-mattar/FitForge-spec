@@ -123,7 +123,9 @@ projects and governance-only checkouts are unaffected. Two rules make it work:
 - **Declare before you commit.** The declaration is read as it stood *when the code was
   committed*: widening it afterwards cannot turn a FAIL into a PASS, exactly as in the
   single-repository check. Legitimate scope discovery is amended in a governance commit
-  made **before** the code phase commit that relies on it.
+  made **before** the code phase commit that relies on it — and that amendment records who
+  approved it, exactly as constitution I requires of any change to an approved feature
+  document.
 - **Territory is never back-declared.** A declaration that post-dates a phase's code commit
   FAILs that commit even when every file it touched is inside the declared paths — the
   ordering is the violation. Turning this on mid-flight therefore means one of two things

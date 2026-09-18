@@ -11,6 +11,7 @@
 - The AI review is produced by a fresh-context agent or second model — the implementer never grades its own diff. (`docs/sdlc/review-process.md`)
 - The reviewer gets diff + spec/plan/contracts, never the implementer's conversation; dispositions are appended. (`docs/sdlc/review-process.md`)
 - Human review is required before merge — a change is never merged until a human reviewer approves (constitution IX). (`docs/sdlc/review-process.md`)
+- The human reviewer judges whether an amendment's approver really agreed — no machine can check that. (`docs/sdlc/review-process.md`)
 - Prefer git revert — each phase is its own commit so a bad phase reverts cleanly. (`docs/sdlc/rollback-process.md`)
 - Never DELETE or DROP protected domain records to undo a change — correct through additive, auditable mechanisms. (`docs/sdlc/rollback-process.md`)
 - A rollback that cannot preserve protected-data immutability is not approved — stop and report. (`docs/sdlc/rollback-process.md`)

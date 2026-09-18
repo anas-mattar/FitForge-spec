@@ -45,6 +45,10 @@ verify its eligibility checklist still holds against the diff (constitution X, M
 ## Technical Review
 
 - [ ] Code diff read end-to-end; no unrelated changes (`git diff --stat` matches the phase scope)
+- [ ] Every amendment to the feature's own approved documents carries its record, and the
+      named approver really did approve it — a machine can only check the record exists and
+      matches its commit; whether consent was real, and whether the implementing agent
+      approved its own amendment, is yours to judge (constitution I)
 - [ ] Architectural compliance (constitution IV) — no unapproved patterns/packages
 - [ ] Security implications considered (authz on new surface, secrets, logging)
 - [ ] Migrations/schema changes are additive or their rollback is documented

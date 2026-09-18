@@ -139,7 +139,7 @@ specs/NNN-<name>/
 ├─ data-model.md          (optional)
 ├─ contracts/             (optional)
 ├─ quickstart.md          (optional)
-├─ notes.md               (optional)
+├─ notes.md               (optional — phase evidence; see below)
 ├─ screenshots/           (optional — visual references, when the project has them)
 ├─ checklists/            (optional)
 ├─ ai-code-review.md      (per-feature; from specs/_templates/)
@@ -150,6 +150,19 @@ specs/NNN-<name>/
 A **Micro** feature's directory holds `spec.md` (the mini-spec) plus the per-feature
 review files only — no `plan.md`/`tasks.md` until promoted to Standard (constitution X,
 Micro lane).
+
+**`notes.md` is where a feature's evidence lives**: phase results, scenario and measurement
+tables, gate records, review findings and their dispositions, and any judgement the feature
+had to write down. **`tasks.md` holds the agreed work and its completion state, and nothing
+else** — a task says what was agreed, and a ticked box says it is done.
+
+The split is not housekeeping. `spec.md`, `plan.md`, `tasks.md` and `contracts/` are the
+documents the amendment rule grades (constitution I, Amendment authority), so annotating a
+task with what actually happened is an **amendment** to an approved document and owes an
+approver record — while the same sentence in `notes.md` owes nothing. Recording what you
+found must never cost an approval, so record it in `notes.md`.
+
+<!-- digest: notes.md holds a feature's evidence; tasks.md holds the agreed work and its completion state alone. -->
 
 ## Cross-Repository Features
 
