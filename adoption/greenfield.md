@@ -108,6 +108,21 @@ task it, implement one phase, have the user run the gate, review, merge. This re
 gear of the framework (branch → spec → phase → gate → diff → reviews → merge) while the
 stakes are zero, and leaves the team knowing what "Done" feels like.
 
+Rehearse the **amendment** ritual here too, because 001 is where it is free: the moment you
+change an approved `spec.md`, `plan.md`, `tasks.md` or `contracts/`, the amended section carries
+`**Amendment approved by**: <name>, <YYYY-MM-DD>` and the commit message names the same person —
+and the agent implementing the change is never the one who approves it (constitution I,
+Amendment authority; `scripts/enforcement-pack.ps1` grades it). A team that meets this rule at
+feature 001 meets it as a habit; one that meets it at feature 004 meets it as a failing check on
+a branch it has already written.
+
+Two edits are deliberately *not* amendments, and 001 is where that is worth learning: approving
+a `spec.md` or `plan.md` in the first place — the `**Status**: Draft` → `**Status**: Approved`
+flip the templates ask for, alone in its commit — and ticking a task box. Everything else in
+`spec.md`, `plan.md`, `tasks.md` and `contracts/` is. Evidence of what a phase actually found
+belongs in `notes.md`, which is ungraded precisely so that recording it never costs an
+approval (`docs/sdlc/branch-strategy.md`).
+
 The scaffold feature's `plan.md` MUST record the selected architecture ADR-style — options
 considered, the decision, and its consequences (layering, dependency direction, persistence
 boundaries, error-handling strategy). Per the bootstrap clause of constitution principle IV,

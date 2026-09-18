@@ -82,7 +82,9 @@ Gates apply at two different points, not uniformly at every phase:
    mini-spec `spec.md` (constitution X, Micro lane; the lane has no tasks.md). A PASS verdict is required; a WARN verdict (no territory declared) is
    acceptable only for features specified before the verification pack. Undeclared
    changes are reverted — or, when the scope discovery is legitimate, the territory is
-   amended with owner approval in a commit made **before** the phase commit that relies
+   amended with owner approval — **recorded** as constitution I requires, an
+   `**Amendment approved by**: <name>, <YYYY-MM-DD>` line with the same name in the commit —
+   in a commit made **before** the phase commit that relies
    on it (the check reads the declaration from the commit's parent, so a stray file can
    never be legalized in the commit that introduces it). The owner still reviews
    `git diff --stat` for intent; the machine makes a skipped or sloppy scope check
@@ -122,13 +124,24 @@ Gates apply at two different points, not uniformly at every phase:
    attestation remains the owner's to audit — but it is now a falsifiable written
    statement, not an unstated assumption.
 
+   The review reads the phase diff **including any amendment to the feature's own approved
+   documents**: a phase that rewrote its plan or its tasks changed the standard it is being
+   graded against, and a review that does not say so is grading the agent's homework against
+   the agent's marking scheme (constitution I, Amendment authority).
+
    <!-- digest: Gate 5: AI review by a fresh-context agent or second model with the Reviewer Provenance block — never self-graded. -->
+
+   <!-- digest: Gate 5 reads a phase's amendments to its own plan or tasks — they change the standard it is graded by. -->
 
 6. **Human review approved (once per feature, at merge)** — after the feature's final phase
    passes gates 1–5, a human reviewer verified business requirements, domain correctness,
    security implications, visual-reference compliance, and architectural compliance across the
    **full feature diff**, and approved the change. **Human review is required before merge**
-   (constitution IX; `specs/_templates/human-pr-review-template.md`).
+   (constitution IX). The review is recorded at `specs/NNN-name/human-pr-review.md`, written
+   from `specs/_templates/human-pr-review-template.md` — the template is where the shape
+   lives, never where a review is filed. The full feature diff includes every amendment made
+   to the feature's approved documents after approval; each one names an approver, and this
+   reviewer is who judges whether that approval was real (constitution I).
 
    <!-- digest: Gate 6: a human reviews the full feature diff and approves before merge — once per feature. -->
 

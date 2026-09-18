@@ -13,6 +13,7 @@
 - Gate 4: scope-check PASS — every changed file inside the declared Territory; amendments precede the phase commit. (`docs/sdlc/definition-of-done.md`)
 - Multi-repo: scope-check-repos.ps1 grades the nested code repositories' phase commits under the same rules. (`docs/sdlc/definition-of-done.md`)
 - Gate 5: AI review by a fresh-context agent or second model with the Reviewer Provenance block — never self-graded. (`docs/sdlc/definition-of-done.md`)
+- Gate 5 reads a phase's amendments to its own plan or tasks — they change the standard it is graded by. (`docs/sdlc/definition-of-done.md`)
 - Gate 6: a human reviews the full feature diff and approves before merge — once per feature. (`docs/sdlc/definition-of-done.md`)
 - If artifacts conflict, stop and report — the constitution prevails; never silently choose. (`docs/sdlc/definition-of-done.md`)
 - Certification is held by the user (the feature's owner); the AI must not claim success without it, in either mode. (`docs/sdlc/gate-command.md`)

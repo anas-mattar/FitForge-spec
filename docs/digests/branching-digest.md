@@ -13,6 +13,7 @@
 - Behavior change is at least Micro; a Micro feature that outgrows a bound promotes in place to Standard, never stretches. (`docs/sdlc/branch-strategy.md`)
 - main is protected: no direct commits, never force-push; merge only after certification and approved human review. (`docs/sdlc/branch-strategy.md`)
 - Push the feature branch before merging; merge --no-ff so the merge commit survives; one commit per phase. (`docs/sdlc/branch-strategy.md`)
+- notes.md holds a feature's evidence; tasks.md holds the agreed work and its completion state alone. (`docs/sdlc/branch-strategy.md`)
 - Every deployable project has its own repository; never mix tiers in one repository unless approved in plan.md. (`docs/sdlc/repository-strategy.md`)
 - Nested layout: code repos cloned inside the governance repo, ignored by it — independent repos, never git submodules. (`docs/sdlc/repository-strategy.md`)
 - Multi-repo Territory entries are repo-prefixed from the governance root; scope-check-repos.ps1 grades code repos. (`docs/sdlc/repository-strategy.md`)
