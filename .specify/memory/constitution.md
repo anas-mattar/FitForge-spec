@@ -2,7 +2,37 @@
 SYNC IMPACT REPORT
 ==================
 Version change: kit template 0.6.0 -> FitForge 1.0.0 (first ratification) -> 1.1.0
-(2026-09-10: Principle I gains the Amendment authority clause)
+(2026-09-10: Principle I gains the Amendment authority clause) -> 1.2.0
+(2026-09-18: the machine that grades it arrives, and the clause gains the exemption
+that machine has always applied)
+
+1.1.0 -> 1.2.0 (FitForge, 2026-09-18)
+Bump rationale: MINOR — two changes to Principle I's Amendment authority clause, both
+  brought by the kit 0.6.0 -> 0.7.0 flow-down (kit feature 014, GAP-019), which delivers
+  scripts/enforcement-pack.ps1's Invoke-AmendmentAuthorityCheck — the machine this clause
+  was written owing.
+  1. **"Progress is not amendment" added.** A tasks.md change that alters nothing but task
+     completion state — a checkbox moving in either direction — is progress and requires no
+     approver; everywhere else the test is the document's text, never the intent behind it.
+     The check has always exempted exactly this shape. Until now FitForge's law was stricter
+     than its own machine, which is the same defect as being looser than it, and it would
+     have charged an approval for ticking a task off.
+  2. **"Enforcement, honestly stated" replaced by "What can be verified, and what cannot".**
+     The old paragraph said the clause is enforced by review and not by machine, and gave the
+     reason: the natural home for the check is a verbatim kit script, so a locally added rule
+     would be reverted by the next update. That reasoning was right and is now answered —
+     the rule ships inside the kit's own verbatim script, so an update reinstalls it rather
+     than reverting it. The replacement keeps the honesty the paragraph was written for by
+     stating the three things the check still cannot do: verify that the named person agreed,
+     enforce the self-approval prohibition (held by review alone), and observe approval
+     itself, which is proxied by a document's first appearance.
+  Nothing else changes. No principle is added or removed, no rung reordered, and every
+  feature in flight is unaffected: the check grades only commits made after it existed, so
+  feature 002's ten phases are outside its range. Swept in the same flow-down: CLAUDE.md,
+  docs/sdlc/review-process.md, docs/sdlc/repository-strategy.md (surgical, mirrored by hand);
+  the kit's verbatim mirrors arrived via update-kit. Human adoption: the project owner's
+  review and approval of the flow-down PR (adoption/updating.md §2 step 6).
+
 Bump rationale: MAJOR — initial ratification. This is FitForge's constitution, adopted
   from the Agentic SDLC Kit at kit version 0.6.0 (kit commit 2f187c9, which includes
   feature 012's cross-repository scope-check reach — the reason FitForge could be adopted
@@ -84,6 +114,17 @@ clause — MUST record who approved it. The amended section carries an
 same approver. **An implementing agent MUST NOT approve its own amendment.** Amending
 before implementing satisfies the sequence; it does not satisfy this rule.
 
+**Progress is not amendment**: a change to `tasks.md` that alters nothing but task completion
+state — a checkbox moving in **either** direction — records progress against work already
+approved and requires no approver. Un-ticking is progress too: it records that work proved
+incomplete, and changes nothing about what was agreed. Every other change to an approved
+document is an amendment, including any task whose **text** changes — re-worded, re-scoped,
+or annotated. The test is the text, not the intent behind it. This exemption is part of the
+rule rather than a detail of whatever grades it: without it the rule would demand an approval
+for finishing a task, and a rule that is absurd in its commonest case is one people route
+around. Added 2026-09-18 with the machine: the check has always exempted this shape, and a
+constitution stricter than its own machine is the same defect as one looser than it.
+
 **Rationale**: added 2026-09-10 after the AI review of feature 001 (governance F3) found
 that every amendment following that feature's single owner approval had been written by
 the implementing session and implemented against minutes later — twenty-nine seconds, in
@@ -94,13 +135,25 @@ correct, which is exactly why the mechanism would have survived one that was not
 the order right — amend, then implement — is a check on retroactivity, not a check on
 consent, and the two had been quietly conflated.
 
-**Enforcement, honestly stated**: this clause is enforced by review, not by machine. The
-natural home for the check is `scripts/enforcement-pack.ps1`, which `kit-manifest.json`
-classes `verbatim` — a rule added to it here would be reverted by the next kit update,
-leaving a constitutional requirement whose check had quietly disappeared. That is worse
-than no check, because nobody would notice. The machine check is therefore owed to the kit
-as its own feature; until it exists, the AI review and the human reviewer are what stands
-between this rule and the habit it was written to break.
+**What can be verified, and what cannot**: the machine check owed to this clause now exists.
+`scripts/enforcement-pack.ps1`'s `Invoke-AmendmentAuthorityCheck` — kit feature 014, arrived
+in this project's 2026-09-18 flow-down — grades, on every `NNN-*` branch, that a record exists,
+is well-formed, and names the same approver as the commit carrying it. The concern that wrote
+the paragraph this replaces was right and is now answered: the rule lives in the kit's own
+verbatim script, so a kit update reinstalls it rather than reverting it.
+
+Three things it still cannot do, and they are the reason this paragraph keeps its honesty.
+It cannot verify that the named person agreed — on a solo project the approver is the same
+human who drove the session. It does not enforce the self-approval prohibition: no link is
+recorded between a commit and the session that produced its diff, so **that half of this rule
+is held by review alone**. And it does not observe approval — a document counts as approved
+once it exists, because this project has no separate approval token, which is why a document's
+first appearance owes no record. What the rule buys is that an amendment is *visible in the
+diff and gradeable*, not that consent is proven: a determined implementer can still write a
+name. The record is a written claim a reviewer can falsify — the strength of the Reviewer
+Provenance block, not of an authentication. The AI review and the human reviewer still stand
+between this rule and the habit it was written to break; they are now the second line rather
+than the only one.
 
 ### II. Source of Truth Hierarchy
 
@@ -282,4 +335,4 @@ evaluated before Phase 0 research and re-evaluated after Phase 1 design. Any vio
 justified in the plan's Complexity Tracking section or the work MUST stop and be reported. Use
 `CLAUDE.md` and the `docs/` guidance files for runtime development guidance.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-10
+**Version**: 1.2.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-18
